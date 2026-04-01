@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using NoPremium2.Config;
 
 namespace NoPremium2.Browser;
 
@@ -10,7 +11,7 @@ public sealed class ChromeLauncher : IVivaldiLauncher
 
     private static readonly string DefaultProfileDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".config", "chrome-nopremium");
+        ".config", DefaultConstants.ChromeProfileDirName);
 
     private readonly AppSettings _settings;
     private readonly ICdpChecker _cdpChecker;

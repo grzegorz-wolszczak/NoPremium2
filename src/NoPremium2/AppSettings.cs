@@ -1,3 +1,5 @@
+using NoPremium2.Config;
+
 namespace NoPremium2;
 
 public sealed record AppSettings
@@ -5,10 +7,10 @@ public sealed record AppSettings
     public string VivaldiPath { get; init; } = "/usr/bin/vivaldi";
     public string ProfileDir { get; init; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".config", "vivaldi-nopremium");
-    public string LoginUrl { get; init; } = "https://www.nopremium.pl/login";
-    public int CdpReadyTimeoutMs { get; init; } = 10_000;
-    public int TurnstileTimeoutMs { get; init; } = 120_000;
+        ".config", DefaultConstants.VivaldiProfileDirName);
+    public string LoginUrl { get; init; } = DefaultConstants.LoginUrl;
+    public int CdpReadyTimeoutMs { get; init; } = DefaultConstants.CdpReadyTimeoutMs;
+    public int TurnstileTimeoutMs { get; init; } = DefaultConstants.TurnstileTimeoutMs;
 
     /// <summary>Creates AppSettings populated from an AppConfig instance.</summary>
     public static AppSettings From(Config.AppConfig config) => new()

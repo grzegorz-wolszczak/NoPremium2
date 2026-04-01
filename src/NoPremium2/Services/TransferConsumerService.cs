@@ -43,7 +43,7 @@ public sealed class TransferConsumerService : BackgroundService
 
         _startTime = ScheduleHelper.ParseTimeOnly(_config.StartTime, "23:00");
         _endTime = ScheduleHelper.ParseTimeOnly(_config.EndTime, "23:55");
-        _interval = TimeSpan.FromMinutes(_config.IntervalMinutes > 0 ? _config.IntervalMinutes : 5);
+        _interval = TimeSpan.FromMinutes(_config.IntervalMinutes > 0 ? _config.IntervalMinutes : DefaultConstants.ScheduleIntervalMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

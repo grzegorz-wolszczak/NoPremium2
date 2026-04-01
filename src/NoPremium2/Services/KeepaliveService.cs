@@ -25,8 +25,9 @@ public sealed class KeepaliveService : BackgroundService
 
         if (!TimeSpan.TryParse(config.KeepaliveInterval, out _interval))
         {
-            _logger.LogWarning("Invalid KeepaliveInterval '{Value}', using default 1 hour", config.KeepaliveInterval);
-            _interval = TimeSpan.FromHours(1);
+            _logger.LogWarning("Invalid KeepaliveInterval '{Value}', using default {Default}",
+                config.KeepaliveInterval, DefaultConstants.KeepaliveInterval);
+            TimeSpan.TryParse(DefaultConstants.KeepaliveInterval, out _interval);
         }
     }
 

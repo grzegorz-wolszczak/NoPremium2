@@ -64,7 +64,32 @@ public static class ConfigLoader
         return config;
     }
 
-    public static LinksConfig LoadLinksConfig(string filePath)
+    /// <summary>
+    /// Resolves the LinksFilePath from AppConfig (may be relative) then loads the file.
+    /// </summary>
+    public static LinksConfig LoadLinksConfig(string configFilePath, AppConfig config)
+    {
+        string resolvedPath;
+        try
+        {
+            var resolver = new PathResolver(configFilePath, AppContext.BaseDirectory);
+            resolvedPath = resolver.Resolve(config.LinksFilePath);
+        }
+        catch (FileNotFoundException ex)
+        {
+            ExitWithError($"Links file not found. {ex.Message}");
+            return null!;
+        }
+        catch (InvalidOperationException ex)
+        {
+            ExitWithError(ex.Message);
+            return null!;
+        }
+
+        return LoadLinksConfig(resolvedPath);
+    }
+
+    internal static LinksConfig LoadLinksConfig(string filePath)
     {
         if (!File.Exists(filePath))
             ExitWithError($"Links file not found: {filePath}");
@@ -115,19 +140,19 @@ public static class ConfigLoader
 
         return config with
         {
-            KeepaliveInterval = NullOrEmpty(config.KeepaliveInterval) ? "01:00:00" : config.KeepaliveInterval,
+            KeepaliveInterval = NullOrEmpty(config.KeepaliveInterval) ? DefaultConstants.KeepaliveInterval : config.KeepaliveInterval,
             TransferConsumer = tc with
             {
-                StartTime = NullOrEmpty(tc.StartTime) ? "23:00" : tc.StartTime,
-                EndTime = NullOrEmpty(tc.EndTime) ? "23:55" : tc.EndTime,
-                IntervalMinutes = tc.IntervalMinutes <= 0 ? 5 : tc.IntervalMinutes,
-                ReserveTransferBytes = tc.ReserveTransferBytes <= 0 ? 3_221_225_472L : tc.ReserveTransferBytes,
+                StartTime        = NullOrEmpty(tc.StartTime)    ? DefaultConstants.ScheduleStartTime      : tc.StartTime,
+                EndTime          = NullOrEmpty(tc.EndTime)      ? DefaultConstants.ScheduleEndTime        : tc.EndTime,
+                IntervalMinutes  = tc.IntervalMinutes  <= 0     ? DefaultConstants.ScheduleIntervalMinutes : tc.IntervalMinutes,
+                ReserveTransferBytes = tc.ReserveTransferBytes <= 0 ? DefaultConstants.ReserveTransferBytes : tc.ReserveTransferBytes,
             },
             VoucherConsumer = vc with
             {
-                StartTime = NullOrEmpty(vc.StartTime) ? "23:00" : vc.StartTime,
-                EndTime = NullOrEmpty(vc.EndTime) ? "23:55" : vc.EndTime,
-                IntervalMinutes = vc.IntervalMinutes <= 0 ? 5 : vc.IntervalMinutes,
+                StartTime       = NullOrEmpty(vc.StartTime)   ? DefaultConstants.ScheduleStartTime      : vc.StartTime,
+                EndTime         = NullOrEmpty(vc.EndTime)     ? DefaultConstants.ScheduleEndTime        : vc.EndTime,
+                IntervalMinutes = vc.IntervalMinutes <= 0     ? DefaultConstants.ScheduleIntervalMinutes : vc.IntervalMinutes,
             },
         };
     }

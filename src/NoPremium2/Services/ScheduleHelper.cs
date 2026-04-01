@@ -59,7 +59,7 @@ internal static class ScheduleHelper
         return todayTarget.AddDays(1) - now;
     }
 
-    public static TimeOnly ParseTimeOnly(string timeStr, string defaultValue = "23:00")
+    public static TimeOnly ParseTimeOnly(string timeStr, string defaultValue = DefaultConstants.ScheduleStartTime)
     {
         if (string.IsNullOrWhiteSpace(timeStr))
             timeStr = defaultValue;
