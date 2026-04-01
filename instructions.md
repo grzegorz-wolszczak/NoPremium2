@@ -53,15 +53,44 @@ Aplikacja będzie miała dwa background/hosted serwisy , jeden do obsługi funkc
 Po uruchomieniu aplikacja uruchomi więc przeglądarkę i utrzymując ją cały czas otwartą będzie wykonywała zadania transfer-consumer i voucher-consumer
 
 
-
-
 ## Wymagania
-- Aplikacja musi wykryawać ze przeglądarka się zamknęła i wtrakcie realiozwania zadań musi otworzyć nową i się do niej podłączyć.
--Aplikacja musi wykrywać że inna instancja jest już uruchomiona w systemie i w takim wypadku druga instancja musi się sama wyłączyć.
-- Pobieranie czasu musi pobierać czas lokalny i odpoytwyąc serwer zewnetrzny bo zegar na virtualce może być nieaktualny. To sie już zdarzało
-- Po starcie aplikacji musi być możliwość przerwania jej działania po niaciśnięciu Ctrl+C
-- Od czasu do czasu 'pozorne' przejścia do stron w stylu https://www.nopremium.pl/help albo https://www.nopremium.pl/offer tylko po to żęby strona wykryła ruch i możliwe że odświerzyła sobie jakieś cistaczka czy inne numery sessji , tak by nie cloudlflare zawsze myślał że użytkonik siedzy przy komputerzenie i wymagała ponownego klikania w okienko "udowodnij że jesteś człowiekm"
+
+### Wymagania funkcjonalne
+- Aplikacja musi uodstępniać możliwość podania pliku konfiguracyjnego jako parametr wejściowy ( format pliku: json). Tam powinny być możliwe do podania następujące wartości konfiguracyjne.
+    - (wymagany) Email user account
+    - (wymagany) Email user password
+    - (wymagany) Email login page - uwaga : odczytaj ze starego kodu gdzie była ta strona do logowania
+    - (wymagany) Nopremium user account
+    - (wymagany) Nopremium user password
+    - (opcjonalny) Godzina startowa od której voucher-consumer ma zacząć swoje działanie (np 23:00) : default: 23:00
+    - (opcjonalny) Godzina końcowa o której voucher-consumer ma zakóńczyć swoje działanie (np 23:55): default: 23:55
+    - (opcjonalny) Intervał jaki ma dzielić poszczególne uruchomienia vocher-consumer w minutach (np 5) default: 5
+      Jeżeli wartości domyśłnie zostaną podane użyj defaultów
+      Jeżali jakaś wartość wymagana nie zostanie podana - progam ma sie zakończyć informując czego brakowało .Zbiorczo czyli jeżeli brakowało wiecej niż jednego to aplikacja ma wyświetlać wszystkich których nie było.
+    -
+- Musi być możliwość przerwania działania aplikacji  po niaciśnięciu Ctrl+C
+- Aplikacja ma supportuwoać przegląarki chrome oraz vivaldi. Na starcie musi wykryć która z nich jest zainstalowana w systemie. Jeżeli żadna to apliacja ma się zakóńczyć z błędem. Jeżeli sa dwie to priorytet ma chrome a potem vivalid.
+
 ### Start aplikacji
-Aplikacja powinna nie wystartowąć - zgłosić błąd przy starcie jeżeli.
+Aplikacja powinna nie wystartowąć t.j zgłosić błąd przy starcie na std output i wyjsć z kodem błędu 1 jezeli:
+- jeżeli plik konfiguracyjny nie istnieje albo nie da sie odczytać lub sparsować.
 - brakuje poświadczeń do zalogowania się do nopremium - czy to w zmiennych środowiskowych czy to w jakimś pliku konfiguracyjnym
 - brakuje poświadczeń do zalogowania sie do konta email - czy to zmiennych środkowiskowych czy to w jakimś pliku konfiguracyjnym
+- w systemie jest już uruchomiona inna instancja tej aplikacji - wtedy w logu podać PID tego procesu i jeżeli to możliwe date jego utworzenia.
+- Przy starcie aplikacji , musi zostać pierwsze zalogowanie się do nopremium.pl i testowe zalogowanie się do email account. Jeżeli cokolwiek sie nie uda to aplikacja ma przestać działać. Jeżeli wszystko sie uda , ma sie wyswitlić log na konsole że sie udało.
+
+### Logowanie:
+Logowanie aplikacji ma sie wyświetlać zarówno na output jak i do pliku z logami który ma być w tym samym katalogu w którym jest binarka aplikacji w podkatalogu Logi
+Pliki z logami musi być rotowany - to znaczy - jeżeli jakaś akcja została wykonana pewnego dnia to ma sie tam pojawic plik o nazwie logi_YYYYMMDD.log. W podfolderze ma być maksymlanie logów z 30 ostatnich dni. Może są do tego jakieś nugety które to automatyzują. Nie wymyślaj swojego kodu, staraj sie wykorzystac istniejące biblioteki. 
+
+- Po rozpoczęciu aplikacji , ma ona wyświetlic swoją konfigurację (hasła oczywiście zamakowane) - czyli wszystkie parametry z jakimi zostła skonfiguroana z pliku.
+- Co do treści logów, to sprawdź kod poprzednich aplikacji i loguj to samo w tych samych sytuacjach.
+
+
+### Inne wymagania
+- Aplikacja będzie często używała czasu. Np do określenia która jest godzina i czy należy zacząć konsumować transfer czy też jest za wcześnie (np przed 23:00) i zignorować tę iterację. - Pobieranie czasu musi umiec pobierać czas lokalny i w tym celu odpytywać serwer zewnetrzny bo zegar na komputrze na którym będzie uruchamian aplikacja może być nieaktualny. To sie już zdarzało.
+
+- Aplikacja musi wykryawać ze przeglądarka się zamknęła i wtrakcie realiozwania zadań musi otworzyć nową i się do niej podłączyć.
+
+
+- W celu 'podtrzymania sesji przeglądarki' aplikacja od czasu do czasu będzie robiła 'jałowe' przejścia do stron w stylu https://www.nopremium.pl/help albo https://www.nopremium.pl/offer tylko po to żęby strona wykryła ruch i możliwe że odświerzyła sobie jakieś cistaczka czy inne numery sessji , tak by nie cloudlflare zawsze myślał że użytkonik siedi przy komputerzenie i wymagała ponownego klikania w okienko "udowodnij że jesteś człowiekm"
