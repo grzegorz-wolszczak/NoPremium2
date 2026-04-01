@@ -1,0 +1,182 @@
+<!-- Notice -->
+<div class="info_notice blue">
+  <strong>Jak pobierać pliki?</strong> - aby pobrać plik na swój komputer kliknij na jego
+  nazwę lub skopiuj link bezpośredni
+  do Managera Pobierania (jDownloader, FlashGet). Jeżeli masz problem z pobraniem pliku napisz do nas
+  wiadomość przez menu Pomoc.
+  <br/>
+  <br/>
+  Jeżeli plik został usunięty przez hosting i nie ma możliwości jego pobrania - kliknij
+  <a
+     href="https://www.nopremium.pl/files/return">tutaj</a> i przywróć transfer.
+  <br/>
+  <br/>
+  Pliki są ważne przez 24h od momentu ich dodania
+</div>
+<div id="totalDownloadFiles" style="display:none;">2
+</div>
+<!-- Fast Download -->
+<div class="subpage_subtitle universal_subtitle_ico">Twoje pliki
+  <span>(TRYB SZYBKIEGO POBIERANIA)</span>
+</div>
+Nie posiadasz żadnych plików w trybie szybkiego pobierania
+<!-- Notice -->
+<div id="infoSlow" class="info_notice blue" style="display:none;">
+  Nasz system wykrył, że niektóre z Twoich plików pobierają się na nasze serwery z niską prędkością. Wynika to z
+  obciążeń po stronie danego serwisu hostingowego i nie mamy na to żadnego wpływu. Jeżeli chcesz, możesz anulować
+  pobieranie plików, których postęp pobierania nie przekroczył 20% - transfer zostanie automatycznie przywrócony.
+  Następnie możesz dodać linki z innego źródła (hostingu) obsługiwanego przez NoPremium.pl. Jeżeli brak jest linków z
+  innego źródła sugerujemy aby dokończyć pobieranie aktualnych plików.
+  <strong>Możesz również skorzystać z naszej <a href="https://www.nopremium.pl/search">wyszukiwarki</a> zaznaczając opcję wyszukiwania w szybkim hostingu</strong>.
+</div>
+<!-- Standard Download -->
+<div class="subpage_subtitle universal_subtitle_ico">Twoje pliki
+  <span>(TRYB POBIERANIA NA SERWERY)</span>
+</div>
+<!-- Standard Download Table -->
+<form id="downloadFilesArea">
+  <table class="table centered">
+    <tr class="table_head">
+      <td>
+        <input type="checkbox" onclick="checkboxFunction('downloadFilesArea');"/>
+      </td>
+      <td>
+      </td>
+      <td style="width: 270px;">Nazwa pliku
+      </td>
+      <td style="width:20%">Status
+      </td>
+      <td>Rozmiar
+      </td>
+      <td style="width: 15%">Wygasa
+      </td>
+      <td>
+      </td>
+    </tr>
+    <tr class="table_content">
+      <td style="width: 20px;">
+        <input type="checkbox" name="sid[]" value="43999438">
+      </td>
+      <td>
+        <img src="https://www.nopremium.pl/images/icons/servers/youtube.png" alt="youtube" title="youtube"/>
+      </td>
+      <td id="action43999438" style="text-align: left;">
+        <a
+           href="https://standard.nopremium.pl/43999438/6a9b3bc3e782b0048b0b8e904c4e654f100bbee9/Heroes_3:_Żniwiarz_Dusz_#21_-_Jaśnie_pan_barbarzyńca.mkv">Heroes
+          3: Żniwiarz Dusz #21 - Jaśni<br />e pan barbarzyńca.mkv</a>
+      </td>
+      <td id="status43999438">
+        <div class="finish">Zakończono
+        </div>
+      </td>
+      <td>414.6 MB
+      </td>
+      <td id="expire43999438">25-07-2024 12:28
+      </td>
+      <td class="dlBox" id="watch_dl43999438" style="text-align: center;">
+        <a href="https://www.nopremium.pl/watch/43999438">
+          <img src="https://www.nopremium.pl/images/icons/play.png">
+        </a>
+      </td>
+    </tr>
+    <tr class="table_content" id="av_scan_main43999438" style="display:none">
+      <td colspan="3" style="text-align: center;">
+        <strong>Wstępne skanowanie antywirusowe:</strong>
+      </td>
+      <td colspan="4" style="text-align: center;" id="av_scan43999438">
+      </td>
+    </tr>
+    <tr class="table_content" id="download_urls43999438">
+      <td>
+        <a
+           class="tooltips"><img style="margin-left:5px;" src="images/notice.png" alt="?"/><span>Plik możesz pobierać z kilku niezależnych lokalizacji geograficznych w celu uzyskania optymalnych prędkości pobierania</span></a>
+      </td>
+      <td>
+        <a
+           class="tooltips"><img style="margin-left:5px;" src="images/notice.png" alt="?"/><span>Plik możesz pobierać z kilku niezależnych lokalizacji geograficznych w celu uzyskania optymalnych prędkości pobierania</span></a>
+      </td>
+    </tr>
+    <tr class="table_content">
+      <td style="width: 20px;">
+        <input type="checkbox" name="sid[]" value="43999400">
+      </td>
+      <td>
+        <img src="https://www.nopremium.pl/images/icons/servers/youtube.png" alt="youtube" title="youtube"/>
+      </td>
+      <td id="action43999400" style="text-align: left;">
+        <a
+           href="https://standard.nopremium.pl/43999400/247c11d005987721b90f344a096c1fb286bd7b55/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm">Diablo
+          2: Resurrected [PL] [HC] Bar<br />barzyńca #12.webm</a>
+      </td>
+      <td id="status43999400">
+        <div class="finish">Zakończono
+        </div>
+      </td>
+      <td>2.48 GB
+      </td>
+      <td id="expire43999400">25-07-2024 12:03
+      </td>
+      <td class="dlBox" id="watch_dl43999400" style="text-align: center;">
+        <a href="https://www.nopremium.pl/watch/43999400">
+          <img src="https://www.nopremium.pl/images/icons/play.png">
+        </a>
+      </td>
+    </tr>
+    <tr class="table_content" id="av_scan_main43999400" style="display:none">
+      <td colspan="3" style="text-align: center;">
+        <strong>Wstępne skanowanie antywirusowe:</strong>
+      </td>
+      <td colspan="4" style="text-align: center;" id="av_scan43999400">
+      </td>
+    </tr>
+    <tr class="table_content" id="download_urls43999400">
+      <td>
+        <a
+           class="tooltips"><img style="margin-left:5px;" src="images/notice.png" alt="?"/><span>Plik możesz pobierać z kilku niezależnych lokalizacji geograficznych w celu uzyskania optymalnych prędkości pobierania</span></a>
+      </td>
+      <td colspan="5" style="text-align: right;">
+        <a href="https://cdn.nopremium.pl/1/1d7d705d/43999400/247c11d0/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm"
+           class="button_multi_dl" title="Pobierz plik z lokalizacji D1">Pobierz z D1</a>
+        <a href="https://cdn.nopremium.pl/3/78683fc2/43999400/247c11d0/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm"
+           class="button_multi_dl" title="Pobierz plik z lokalizacji D3">Pobierz z D3</a>
+        <a href="https://cdn.nopremium.pl/6/1be8ec16/43999400/247c11d0/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm"
+           class="button_multi_dl" title="Pobierz plik z lokalizacji D6">Pobierz z D6</a>
+        <a href="https://cdn.nopremium.pl/7/bb91c6e0/43999400/247c11d0/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm"
+           class="button_multi_dl" title="Pobierz plik z lokalizacji D7">Pobierz z D7</a>
+        <a href="https://cdn.nopremium.pl/8/8144968a/43999400/247c11d0/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm"
+           class="button_multi_dl" title="Pobierz plik z lokalizacji D8">Pobierz z D8</a>
+      </td>
+      <td>
+        <a
+           class="tooltips"><img style="margin-left:5px;" src="images/notice.png" alt="?"/><span>Plik możesz pobierać z kilku niezależnych lokalizacji geograficznych w celu uzyskania optymalnych prędkości pobierania</span></a>
+      </td>
+    </tr>
+  </table>
+</form>
+<br/>
+<input type="button" onclick="AskDelFiles(2);" class="button light" style="height: 32px" value="Usuń zaznaczone" />
+<!-- Links -->
+<div class="toggle" style="margin-bottom: 10px; float: none;">
+  <br />
+  <a style="cursor:pointer;" onclick="ShowDirectLinks(2);">Linki bezpośrednie dla managerów pobierania
+    <b>(kliknij, aby rozwinąć)
+    </b></a>
+  <br />
+  <br />
+  <div class="toggle-inner">
+    <div class="input" id="StandardDirectLinksDiv" style="display:none;">
+      <textarea id="StandardDirectLinks" style="height:40px;">https://standard.nopremium.pl/43999438/6a9b3bc3e782b0048b0b8e904c4e654f100bbee9/Heroes_3:_Żniwiarz_Dusz_#21_-_Jaśnie_pan_barbarzyńca.mkv
+        https://standard.nopremium.pl/43999400/247c11d005987721b90f344a096c1fb286bd7b55/Diablo_2:_Resurrected_[PL]_[HC]_Barbarzyńca_#12.webm
+      </textarea>
+    </div>
+  </div>
+</div>
+<div style="display:none;">
+  <!-- HappyHour Download -->
+  <div class="subpage_subtitle universal_subtitle_ico">Twoje pliki
+    <span>(TRYB POBIERANIA HAPPYHOUR)</span>
+  </div>
+  Nie posiadasz żadnych plików w trybie pobierania kolejki HappyHour
+  <div id="StandardHHDirectLinks" style="display:none;">
+  </div>
+</div>

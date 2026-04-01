@@ -1,0 +1,61 @@
+﻿
+
+
+
+			<div class="subpage_subtitle universal_subtitle_ico" style="color: green;">Przetworzone pliki (1)</div>
+			<table class="table" style="margin-bottom:10px;">
+				<tbody>
+
+				<tr class="table_head downloadOK">
+					<td></td>
+					<td></td>
+					<td>Nazwa pliku</td>
+					<td>Rozmiar</td>
+				</tr>
+				 				<tr class="table_content">
+					<td style="width: 20px;"><input type="checkbox" id="hash0" name="hash0" value="d7033748d9" onclick="UpdateCounter();" checked="true"/></td>
+					<td><img src="https://www.nopremium.pl/images/icons/servers/youtube.png" alt="youtube" title="youtube"/></td>
+					<td style="text-align: left;"><label for="hash0">⚔️ HEROES 3: Rankedy - Prawie weekendowy songreque<br />st 🎶 !lvbet_1080p</label></td>
+					<td>8.3 GB</td>
+					<input type="hidden" id="charge0" value="8909698676">
+				</tr>
+								</tbody>
+				</table>
+				<div class="info_notice blue" style="border-radius: 0px 0px 3px 3px;">
+
+
+
+				<input type="button" onclick="addFiles();" class="button yellow" style="float: left; margin-top: 8px; height:32px;" value="Dodaj zaznaczone">
+				<div class="input" style="display: inline; float: right;">
+					Transfer potrzebny na dodanie zaznaczonych plików: <input type="text" name="countSize" id="countSize" style="width:80px;" readonly="readonly" value="8.3 GB">
+				</div>
+
+
+				<p style="margin-top:50px; font-style:italic;">
+
+								</p>
+
+			<div style="text-align: center">
+				<hr />
+				<br />
+				<p style="font-size:12px;"><strong>Transfer zostanie pobrany z Twojego konta od razu po kliknięciu przycisku</strong></p>
+				<br />
+				<p style="font-size:12px;"><strong>Pliki będą dostępne do pobrania przez 24h</strong></p>
+			</div>
+
+			<input name="mode" id="mode" type="hidden" value="1" checked="checked">
+
+													<label for="mode">
+
+								<div id="modeCheckbox" class="info_notice" style="padding: 5px;display:none;">
+
+
+								<strong>Pobierz na serwery</strong> (pobieranie plików na serwery NoPremium.pl - maksymalna prędkość pobierania na dysk użytkownika)
+								</div>
+								</label>
+
+
+                            											<span id="hh"></span>
+
+
+				</div>

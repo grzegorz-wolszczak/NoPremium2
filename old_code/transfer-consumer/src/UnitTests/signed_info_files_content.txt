@@ -1,0 +1,937 @@
+﻿<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="pl-PL">
+
+<head>
+
+    <!-- Meta Tags -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <!-- Page Title -->
+    <title>Konto Premium Wrzucaj, Oboom, DDownload, Turbobit, NitroFlare i inne bez limitów!</title>
+
+    <!-- Page Description -->
+    <meta name="description"
+        content="Pobieraj z Wrzucaj, Oboom, DDownload, Turbobit, NitroFlare i wielu innych bez limitów! Konto Premium, konta Premium">
+    <meta name="google-site-verification" content="hJlHUdhXjuDrtbH-TV1dyBZT5pg1evO-EmYDEhBCYrU" />
+    <meta name="google-site-verification" content="4LC13VRythfuIjil12wfBXockjX3BJSZwKW3M_xqf0c" />
+    <meta name="google-site-verification" content="8axgoAq7rMisegN08YgsPmhahQvbhsr4eVTPLY3Z68s" />
+    <meta name="verify-paysera" content="ea50fb0bf87072f88d5e3a8cb5725ff4">
+
+    <link rel="canonical" href="https://www.nopremium.pl/files" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title"
+        content="Konto Premium Wrzucaj, Oboom, DDownload, Turbobit, NitroFlare i inne bez limitów!" />
+    <meta property="og:description"
+        content="Pobieraj z Wrzucaj, Oboom, DDownload, Turbobit, NitroFlare i wielu innych bez limitów! Konto Premium, konta Premium" />
+    <meta property="og:url" content="https://www.nopremium.pl/files" />
+    <meta property="og:image" content="https://www.nopremium.pl/images/logo.png" />
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@">
+    <meta name="twitter:title"
+        content="Konto Premium Wrzucaj, Oboom, DDownload, Turbobit, NitroFlare i inne bez limitów!">
+    <meta name="twitter:description"
+        content="Pobieraj z Wrzucaj, Oboom, DDownload, Turbobit, NitroFlare i wielu innych bez limitów! Konto Premium, konta Premium">
+
+    <!-- Google Web Font -->
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:400,700&amp;subset=latin,latin-ext' rel='stylesheet'
+        type='text/css'>
+
+    <!-- CSS Stylesheets -->
+    <link type="text/css" href="https://www.nopremium.pl/css/style.css" rel="stylesheet" media="screen" />
+    <link type="text/css" href="https://www.nopremium.pl/css/cupertino/jquery-ui-1.8.22.custom.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Java Scripts -->
+    <script src="https://www.nopremium.pl/js/jquery-1.7.2.min.js"></script>
+    <script src="https://www.nopremium.pl/js/jquery-ui-1.8.22.custom.min.js"></script>
+
+    <script>
+        {lang: 'pl'}
+    </script>
+    <script src="https://www.nopremium.pl/js/scroll.js"></script>
+    <script src="https://www.nopremium.pl/js/stats.js"></script>
+    <script src="https://www.nopremium.pl/js/utils.js"></script>
+    <script src="https://www.nopremium.pl/js/hoverIntent.js"></script>
+    <script src="https://www.nopremium.pl/js/superfish.js"></script>
+    <script src="https://www.nopremium.pl/js/tooltip.js"></script>
+    <script src="https://www.nopremium.pl/js/toggle.js"></script>
+
+
+
+    <link rel="shortcut icon" href="https://www.nopremium.pl/images/np_ico.png" type="image/png">
+
+
+
+    <style>
+        @-webkit-keyframes blinker {
+            from {
+                opacity: 1.0;
+            }
+
+            to {
+                opacity: 0.0;
+            }
+        }
+
+        @keyframes blinker {
+            from {
+                opacity: 1.0;
+            }
+
+            to {
+                opacity: 0.0;
+            }
+        }
+
+        .blink {
+            text-decoration: blink;
+
+            -webkit-animation-name: blinker;
+            animation-name: blinker;
+            -webkit-animation-iteration-count: infinite;
+            animation-iteration-count: infinite;
+            -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+            animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+            -webkit-animation-duration: 1s;
+            animation-duration: 1s;
+        }
+    </style>
+
+
+    <!-- TrustBox script -->
+    <script type="text/javascript" src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async></script>
+    <!-- End TrustBox script -->
+
+
+</head>
+
+<body onload="loadUserFiles();">
+    <!-- Header Start -->
+    <div id="header">
+
+        <!-- Top  -->
+
+        <div id="top">
+
+
+            <!-- Signed -->
+            <div id="signed">
+                <!-- Social - Finish -->
+
+
+
+                Zalogowany jako: <span class="y"><strong>regular.p</strong></span>, konto premium (wygasa: 12-11-2024
+                22:11) <b>|</b> <a href="https://www.nopremium.pl/settings">Ustawienia</a> <b>|</b> <a
+                    href="https://www.nopremium.pl/logout">Wyloguj się</a> <br>
+			Pozostały transfer: <span class="y">2523.62 GB </span> (w tym <span class="y">22.12 GB</span> transferu Premium +
+                <span class="y">2501.5 GB</span> transferu dodatkowego)
+            </div>
+            <!-- Signed - Finish -->
+
+        </div>
+        <!-- Top - Finish -->
+
+
+        <!-- Bottom - Start -->
+        <div id="bottom">
+
+            <!-- Logo -->
+            <div id="logo"><a href="/home"
+                    title="Powrót do strony głównej"><img src="https://www.nopremium.pl/images/logo.png" alt="NoPremium.pl" /></a>
+            </div>
+
+            <!-- Menu - Start -->
+            <div id="menu">
+                <ul class="sf-menu">
+
+                    <li><a class="more" href="https://www.nopremium.pl/files">Twoje konto</a></li>
+                    <li><a rel="nofollow" class="transfer" href="https://www.nopremium.pl/offer">Doładuj konto</a></li>
+                    <li><a rel="nofollow" class="download" href="https://www.nopremium.pl/files">Pobierz pliki</a></li>
+                    <li><a rel="nofollow" class="video" href="https://www.nopremium.pl/watch">Oglądaj video</a></li>
+                    <li><a class="transfer" href="https://www.nopremium.pl/help">Pomoc</a></li>
+                    <li><a class="more" style="cursor:pointer;">Inne</a>
+                        <ul class="dropdown" style="z-index:501;">
+                            <li><a href="https://www.nopremium.pl/faq#faq">Pytania i odpowiedzi</a></li>
+                            <li><a href="https://www.nopremium.pl/opinions#opinions">Opinie użytkowników</a></li>
+                            <li><a href="https://www.nopremium.pl/contact#contact">Kontakt</a></li>
+                            <li><a href="https://www.nopremium.pl/legal#legal">Opinia prawna</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <!-- Menu - Finish -->
+
+        </div>
+        <!-- Bottom - Finish -->
+        <!-- Breadcrumbs -->
+        <div id="breadcrumbs">
+            <div class="breadcrumbs">
+
+                <ul>
+                    <li>Jesteś tutaj:</li>
+                    <li><a href="/">NoPremium.pl</a></li>
+                    <li>Pobierz pliki</li>
+                </ul>
+
+            </div>
+        </div>
+        <!-- Breadcrumbs - Finish -->
+
+    </div>
+    <!-- Header - Finish -->
+
+    <script src="https://www.nopremium.pl/js/functions.js"></script>
+    <script src="https://www.nopremium.pl/js/multiajax.js"></script>
+    <script type="text/javascript" src="https://www.nopremium.pl/js/searchacc.js?555"></script>
+    <script type="text/javascript">
+        var BASEURL = 'https://www.nopremium.pl';
+var LINK = 'files';
+var WATCHONLINE = '';
+    </script>
+    <script src="https://www.nopremium.pl/js/files2.js?50"></script>
+
+    <script src="https://www.nopremium.pl/js/tooltip.js"></script>
+
+    <!-- Main Content -->
+    <div class="wrapper">
+
+        <div class="info_notice blue" style="margin-top: 10px; margin-bottom: 0px;text-align:center;font-size:24px;">
+
+            <h1><strong>Aplikacja mobilna Android już dostępna!</strong></h1>
+            <br /><br />
+            <p style="font-size:24px;line-height: 26px;">Z przyjemnością informujemy o wprowadzeniu oficjalnej aplikacji
+                serwisu NoPremium na platformę Android.</p>
+
+            <br /><br />
+            <p>
+                <a target="_blank"
+                    href='https://play.google.com/store/apps/details?id=net.nopremium'><img alt='pobierz z Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/pl_badge_web_generic.png' style="width: 40%"/></a>
+
+                <hr />
+                <br />
+            <h1 style="color: green;"><strong>Mobilny bonus - 5 GB za free!</strong></h1>
+            <br /><br />
+            <p style="line-height: 30px;font-size:24px;">Każdy dotychczasowy użytkownik serwisu, który co najmniej raz
+                dokonał doładowania konta w serwisie otrzyma bonus <strong>5 GB</strong> przy pierwszym logowaniu w
+                aplikacji.</p>
+
+            </p>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Left Content -->
+        <div id="left_content">
+
+
+
+
+
+            <div id="searchDiv" style="display:none;">
+
+                <script type="text/javascript">
+                    var SEARCHLINK = 'search';
+var LINKFILES = 'files';
+var LINKWATCH = 'watch';
+                </script>
+
+                <style>
+                    .button_search {
+                        margin: 5px;
+                        -webkit-border-radius: 5px;
+                        -moz-border-radius: 5px;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        border: 1px solid #ffaa22;
+                        display: inline-block;
+                        cursor: pointer;
+                        line-height: 15px;
+                        color: #000000 !important;
+                        font-family: Verdana;
+                        font-size: 11px;
+                        padding: 0px 12px;
+                        text-decoration: none;
+                        background-color: #ffec64;
+                    }
+
+                    .button_search:hover {
+                        background-color: #ffab23;
+                    }
+
+                    .button_search:active {
+                        position: relative;
+                        top: 1px;
+                    }
+                </style>
+
+                <script src="https://www.nopremium.pl/js/fancybox/jquery.fancybox.min.js"></script>
+                <script src="https://www.nopremium.pl/js/jquery.modal.min.js"></script>
+                <link rel="stylesheet" href="https://www.nopremium.pl/css/fancybox/jquery.fancybox.min.css" />
+                <link rel="stylesheet" href="https://www.nopremium.pl/css/jquery.modal.min.css" />
+
+                <div class="subpage_title search_ico">Wyszukiwarka</div>
+
+
+                <div class="partnership_subpage" style="margin-bottom: 20px;">
+                    Nie wiesz co pobrać? <strong>Przeszukaj zasoby NoPremium.pl!</strong><br/>
+                </div>
+
+                <div class="input">
+                    <input style="float: left; height: 28px; width: 500px;" placeholder="wyszukaj ..." type="text" autocomplete="off" size="25" maxlength="200"  id="searchKeyword" name="searchKeyword"  onkeydown="if (event.keyCode == 13) document.getElementById('searchButton').click();"/>
+                    <div style="display:none;">
+                        <select name="searchmode" id="searchmode" style="width: 200px; height: 48px; margin-left: 10px;">
+		<option value="1">Wyszukaj dokładnie</option>
+		<option value="2">Wyszukaj wszystkie słowa kluczowe</option>
+	</select>
+                    </div>
+                    <input type="button" id="searchButton" onclick="startSearch(1);" class="button yellow" style="float: right; margin-top: 8px; height:32px;width:60px;" value="Szukaj">
+                </div>
+                <div class="clearfix"></div>
+
+                <div class="info_notice"
+                    style="width:300px;color: #265d99; font-size: 14px;line-height: 22px; letter-spacing: -0.5px;">
+                    <input type="checkbox" id="search_adult"><label for="search_adult">Wyszukaj równiez w materiałach dla dorosłych</span></label>
+                </div>
+
+
+                <div class="clearfix"></div>
+                <br />
+
+                <div class="info_notice blue" style="display:none; color: #265d99; font-size: 14px; font-family: " Open
+                    Sans", Arial, Tahoma, sans-serif; line-height: 22px; letter-spacing: -0.5px;">
+                    <input type="checkbox" onclick="checkBoxcheck('searchfast2');" name="wheresearch" id="searchfast2" value="catshare">
+                    <label for="searchfast2"> Szukaj tylko plików w hostingu CatShare<font color="green"> (wysokie prędkości, 100% dostępności plików)</font></label>
+                    <br />
+                </div>
+                <div class="clearfix"></div>
+
+                <div id="searchResult"></div>
+
+
+                <script>
+                    $(function() {
+            $("#searchKeyword").autocomplete({
+                source: function(request, response) {
+
+                    $.ajax({
+                        url: "/search?query=" + request.term,
+                        type: "GET",
+                        success: function(data) {
+                            response($.map(JSON.parse(data), function(item) {
+                                if(typeof(item.filename) !== 'undefined' && typeof(item.downloads) !== 'undefined') {
+                                    return {
+                                        label: item.filename + ' (pobrań: ' + item.downloads + ')',
+                                        value: item.filename
+                                    }
+                                } else {
+                                    return {
+                                        label: item
+                                    }
+                                }
+                            }));
+                        },
+                    });
+                },
+
+                minLength: 1
+            })
+        });
+                </script>
+
+
+                <br />
+                <hr />
+
+
+            </div>
+
+            <!-- Headline -->
+            <div class="subpage_title download_files_ico">Pobierz pliki</div>
+
+
+            <form id="filesForm" name="filesForm" method="post">
+                <div id="returnedFiles" style="dispaly:none;"></div>
+
+
+                <!-- loading -->
+                <div id="progressPanel" style="display:none; text-align: center;">
+                    Trwa przetwarzanie plików (<strong id="loadProgress">0/0</strong>)
+                    <br />
+                    <img src="https://www.nopremium.pl/images/loader.gif" style="margin-top: 10px;" alt="" />
+                </div>
+                <!-- loading - finish -->
+
+                <!-- loading -->
+                <div class="user_loading" id="insertLoading" style="display:none; text-align: center;">
+                    Trwa umieszczanie plików na liście pobierania - proszę czekać
+                    <br />
+                    <img src="https://www.nopremium.pl/images/loader.gif" style="margin-top: 10px;" alt="" />
+                </div>
+                <!-- loading - finish -->
+
+                <div id="insertPanel">
+
+                    <!-- Notice -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    <div class="info_notice green" id="infoSearch"><strong>Szybkie wyszukiwanie plików?</strong> -
+                        kliknij
+                        <strong><a style="cursor:pointer;" onclick="document.getElementById('searchDiv').style.display = '';document.getElementById('infoSearch').style.display = 'none';">tutaj</a></strong>
+                    </div>
+                    <div class="info_notice blue"><strong>Jak dodawać pliki?</strong> - aby dodać pliki do pobierania
+                        wklej listę swoich linków i naciśnij przycisk <strong>Dodaj</strong></div>
+
+
+
+
+
+
+
+
+
+
+                    <!-- Add Files -->
+                    <div class="subpage_subtitle universal_subtitle_ico">Dodaj pliki</div>
+                    <div>
+                        <strong>Obsługiwane hostingi:</strong>
+                        filefactory |
+                        turbobit |
+                        youtube |
+                        redtube |
+                        tube8 |
+                        4shared |
+                        mediafire |
+                        hitfile |
+                        fastshare |
+                        1fichier |
+                        mega |
+                        youporn |
+                        pornhub |
+                        alfafile |
+                        katfile |
+                        icerbox |
+                        filenext |
+                        isra |
+                        megaup |
+                        dropapk |
+                        ddownload |
+                        vidoza |
+                        dailyuploads |
+                        uploadrar |
+                        fastclick |
+                        upstore |
+                        gigapeta |
+                        downloadly |
+                        uloz |
+                        soundcloud |
+                        <strong>nitroflare (beta) </strong> |
+                        fikper |
+                        wupfile |
+                        dailymotion |
+                        sendspace |
+                        upstream |
+                        webshare |
+                        <strong>hotlink (beta) </strong> |
+                        hot4share |
+                        wrzucaj |
+                        syncs |
+                        filer |
+                        hexupload |
+                        worldbytez |
+                        filestore |
+                        pobieraj |
+                        rosefile |
+                        yandex |
+                        krakenfiles |
+                        mixdrop |
+                        prefiles |
+                        googledrive |
+                        vimeo |
+                        shareplace |
+                        filestore.to |
+                        torrent |
+                        oboom |
+                        wyslij |
+                        <strong>filefox (beta) </strong> |
+                        usersdrive |
+                        <br /><br />
+                    </div>
+
+                    <div class="input">
+                        <textarea name="filesList" id="filesList"></textarea>
+                    </div>
+                    <input type="button" onclick="submitFiles();" class="button yellow" style="float: right; margin-top: 8px; height:32px;" value="Dodaj">
+                    <div class="clearfix"></div>
+                </div>
+            </form>
+
+            <div id="loadUserFiles">
+                <div class="user_loading" style="text-align: center;">
+                    Trwa ładowanie listy plików - proszę czekać
+                    <br />
+                    <img src="https://www.nopremium.pl/images/loader.gif" style="margin-top: 10px;" alt="" />
+                </div>
+            </div>
+
+        </div>
+        <style>
+            .apple-tv {
+                background: url(../images/apple_tv_ico_26.png) no-repeat 8% 48%;
+            }
+
+            .apple-tv.current {
+                background: url(../images/apple_tv_ico_26.png) no-repeat 8% 48%, url(../images/right_menu_active_first.png) no-repeat;
+                display: block;
+                border: 0px;
+                margin: -1px 0 0 -3px;
+                box-shadow: 0px 0px 0px 0px #fff;
+                position: relative;
+                z-index: 500;
+                color: #ff6c00;
+                font-weight: bold;
+            }
+        </style>
+
+        <!-- Right Content -->
+        <div id="right_menu">
+
+            <div class="right_menu">
+                <a href="https://www.nopremium.pl/files" class="download_files tooltip current">Pobierz pliki</a>
+                <a href="https://www.nopremium.pl/smart" class="watch tooltip ">Aktywuj Smart
+                    TV<span class="tip">Aktywuj Smart TV</span></a>
+                <a href="https://www.nopremium.pl/plugins/apple-tv" class="apple-tv tooltip ">Apple
+                    TV<span class="tip">Apple TV</span></a>
+
+
+                <a href="https://www.nopremium.pl/watch" class="watch tooltip ">Oglądaj
+                    video<span class="tip">Oglądaj filmy online</span></a>
+                <a href="https://www.nopremium.pl/search"
+                    class="search tooltip "><strong>Wyszukiwarka plików</strong><span class="tip">Wyszukiwarka plików</span></a>
+                <a href="https://www.nopremium.pl/partner" class="partnership tooltip ">Transfer za
+                    darmo<span class="tip">Transfer za darmo</span></a>
+                <a href="https://www.nopremium.pl/dhistory" class="download_history tooltip ">Historia
+                    pobierania<span class="tip">Historia pobierania</span></a>
+                <a href="https://www.nopremium.pl/notepad"
+                    class="notepad tooltip ">Notatnik<span class="tip">Twój notatnik</span></a>
+                <a href="https://www.nopremium.pl/rhistory" class="account_history tooltip ">Historia
+                    doładowań<span class="tip">Historia doładowań</span></a>
+                <a href="https://www.nopremium.pl/voucher" class="transfer_code tooltip ">Kod
+                    doładowujący<span class="tip">Doładuj swoje konto</span></a>
+                <a href="https://www.nopremium.pl/addop" class="add_opinion tooltip ">Twoja
+                    opinia<span class="tip">Dodaj opinię o serwisie</span></a>
+            </div>
+        </div>
+        <!-- Right Content - Finish -->
+        <div class="box-shadow-2"></div>
+        <!-- Left Content - Finish-->
+
+
+    </div>
+    <!-- Main Content - Finish -->
+
+    <div class="clearfix"></div>
+
+    <!-- Support -->
+    <div id="footer_bottom">
+
+        <div class="wrapper">
+            <div id="servers-title">Obsługiwane Hostingi Premium</div>
+            <div id="servers">
+
+                <a title="filefactory"
+                    href="https://www.nopremium.pl/filefactory-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/filefactory.png" alt="filefactory"/></a>
+
+
+
+                <a title="turbobit"
+                    href="https://www.nopremium.pl/turbobit-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/turbobit.png" alt="turbobit"/></a>
+
+
+
+                <a title="youtube"
+                    href="https://www.nopremium.pl/youtube-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/youtube.png" alt="youtube"/></a>
+
+
+
+                <a title="redtube"
+                    href="https://www.nopremium.pl/redtube-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/redtube.png" alt="redtube"/></a>
+
+                <a title="tube8"
+                    href="https://www.nopremium.pl/tube8-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/tube8.png" alt="tube8"/></a>
+
+                <a title="4shared"
+                    href="https://www.nopremium.pl/4shared-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/4shared.png" alt="4shared"/></a>
+
+
+
+                <a title="mediafire"
+                    href="https://www.nopremium.pl/mediafire-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/mediafire.png" alt="mediafire"/></a>
+
+
+
+                <a title="hitfile"
+                    href="https://www.nopremium.pl/hitfile-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/hitfile.png" alt="hitfile"/></a>
+
+
+
+                <a title="fastshare"
+                    href="https://www.nopremium.pl/fastshare-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/fastshare.png" alt="fastshare"/></a>
+
+
+
+                <a title="1fichier"
+                    href="https://www.nopremium.pl/1fichier-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/1fichier.png" alt="1fichier"/></a>
+
+
+
+                <a title="mega"
+                    href="https://www.nopremium.pl/mega-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/mega.png" alt="mega"/></a>
+
+
+
+                <a title="youporn"
+                    href="https://www.nopremium.pl/youporn-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/youporn.png" alt="youporn"/></a>
+
+                <a title="pornhub"
+                    href="https://www.nopremium.pl/pornhub-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/pornhub.png" alt="pornhub"/></a>
+
+                <a title="alfafile"
+                    href="https://www.nopremium.pl/alfafile-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/alfafile.png" alt="alfafile"/></a>
+
+
+
+                <a title="katfile"
+                    href="https://www.nopremium.pl/katfile-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/katfile.png" alt="katfile"/></a>
+
+
+
+                <a title="icerbox"
+                    href="https://www.nopremium.pl/icerbox-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/icerbox.png" alt="icerbox"/></a>
+
+
+
+                <a title="filenext"
+                    href="https://www.nopremium.pl/filenext-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/filenext.png" alt="filenext"/></a>
+
+
+
+                <a title="isra"
+                    href="https://www.nopremium.pl/isra-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/isra.png" alt="isra"/></a>
+
+
+
+                <a title="megaup"
+                    href="https://www.nopremium.pl/megaup-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/megaup.png" alt="megaup"/></a>
+
+
+
+                <a title="dropapk"
+                    href="https://www.nopremium.pl/dropapk-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/dropapk.png" alt="dropapk"/></a>
+
+
+
+                <a title="ddownload"
+                    href="https://www.nopremium.pl/ddownload-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/ddownload.png" alt="ddownload"/></a>
+
+
+
+                <a title="vidoza"
+                    href="https://www.nopremium.pl/vidoza-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/vidoza.png" alt="vidoza"/></a>
+
+
+
+                <a title="dailyuploads"
+                    href="https://www.nopremium.pl/dailyuploads-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/dailyuploads.png" alt="dailyuploads"/></a>
+
+
+
+                <a title="uploadrar"
+                    href="https://www.nopremium.pl/uploadrar-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/uploadrar.png" alt="uploadrar"/></a>
+
+
+
+                <a title="fastclick"
+                    href="https://www.nopremium.pl/fastclick-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/fastclick.png" alt="fastclick"/></a>
+
+
+
+                <a title="upstore"
+                    href="https://www.nopremium.pl/upstore-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/upstore.png" alt="upstore"/></a>
+
+
+
+                <a title="gigapeta"
+                    href="https://www.nopremium.pl/gigapeta-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/gigapeta.png" alt="gigapeta"/></a>
+
+
+
+                <a title="downloadly"
+                    href="https://www.nopremium.pl/downloadly-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/downloadly.png" alt="downloadly"/></a>
+
+
+
+                <a title="uloz"
+                    href="https://www.nopremium.pl/uloz-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/uloz.png" alt="uloz"/></a>
+
+
+
+                <a title="soundcloud"
+                    href="https://www.nopremium.pl/soundcloud-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/soundcloud.png" alt="soundcloud"/></a>
+
+
+
+                <a title="nitroflare"
+                    href="https://www.nopremium.pl/nitroflare-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/nitroflare.png" alt="nitroflare"/></a>
+
+
+
+                <a title="fikper"
+                    href="https://www.nopremium.pl/fikper-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/fikper.png" alt="fikper"/></a>
+
+
+
+                <a title="wupfile"
+                    href="https://www.nopremium.pl/wupfile-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/wupfile.png" alt="wupfile"/></a>
+
+
+
+                <a title="dailymotion"
+                    href="https://www.nopremium.pl/dailymotion-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/dailymotion.png" alt="dailymotion"/></a>
+
+
+
+                <a title="sendspace"
+                    href="https://www.nopremium.pl/sendspace-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/sendspace.png" alt="sendspace"/></a>
+
+
+
+                <a title="upstream"
+                    href="https://www.nopremium.pl/upstream-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/upstream.png" alt="upstream"/></a>
+
+
+
+                <a title="webshare"
+                    href="https://www.nopremium.pl/webshare-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/webshare.png" alt="webshare"/></a>
+
+
+
+                <a title="hotlink"
+                    href="https://www.nopremium.pl/hotlink-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/hotlink.png" alt="hotlink"/></a>
+
+
+
+                <a title="hot4share"
+                    href="https://www.nopremium.pl/hot4share-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/hot4share.png" alt="hot4share"/></a>
+
+
+
+                <a title="wrzucaj"
+                    href="https://www.nopremium.pl/wrzucaj-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/wrzucaj.png" alt="wrzucaj"/></a>
+
+
+
+                <a title="syncs"
+                    href="https://www.nopremium.pl/syncs-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/syncs.png" alt="syncs"/></a>
+
+
+
+                <a title="filer"
+                    href="https://www.nopremium.pl/filer-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/filer.png" alt="filer"/></a>
+
+
+
+                <a title="hexupload"
+                    href="https://www.nopremium.pl/hexupload-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/hexupload.png" alt="hexupload"/></a>
+
+
+
+                <a title="worldbytez"
+                    href="https://www.nopremium.pl/worldbytez-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/worldbytez.png" alt="worldbytez"/></a>
+
+
+
+                <a title="filestore"
+                    href="https://www.nopremium.pl/filestore-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/filestore.png" alt="filestore"/></a>
+
+
+
+                <a title="pobieraj"
+                    href="https://www.nopremium.pl/pobieraj-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/pobieraj.png" alt="pobieraj"/></a>
+
+
+
+                <a title="rosefile"
+                    href="https://www.nopremium.pl/rosefile-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/rosefile.png" alt="rosefile"/></a>
+
+
+
+                <a title="yandex"
+                    href="https://www.nopremium.pl/yandex-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/yandex.png" alt="yandex"/></a>
+
+
+
+                <a title="krakenfiles"
+                    href="https://www.nopremium.pl/krakenfiles-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/krakenfiles.png" alt="krakenfiles"/></a>
+
+
+
+                <a title="mixdrop"
+                    href="https://www.nopremium.pl/mixdrop-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/mixdrop.png" alt="mixdrop"/></a>
+
+
+
+                <a title="prefiles"
+                    href="https://www.nopremium.pl/prefiles-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/prefiles.png" alt="prefiles"/></a>
+
+
+
+                <a title="googledrive"
+                    href="https://www.nopremium.pl/googledrive-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/googledrive.png" alt="googledrive"/></a>
+
+
+
+                <a title="vimeo"
+                    href="https://www.nopremium.pl/vimeo-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/vimeo.png" alt="vimeo"/></a>
+
+
+
+                <a title="shareplace"
+                    href="https://www.nopremium.pl/shareplace-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/shareplace.png" alt="shareplace"/></a>
+
+
+
+                <a title="filestore.to"
+                    href="https://www.nopremium.pl/filestore.to-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/filestore.to.png" alt="filestore.to"/></a>
+
+
+
+                <a title="torrent"
+                    href="https://www.nopremium.pl/torrent-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/torrent.png" alt="torrent"/></a>
+
+
+
+                <a title="oboom"
+                    href="https://www.nopremium.pl/oboom-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/oboom.png" alt="oboom"/></a>
+
+
+
+                <a title="wyslij"
+                    href="https://www.nopremium.pl/wyslij-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/wyslij.png" alt="wyslij"/></a>
+
+
+
+                <a title="filefox"
+                    href="https://www.nopremium.pl/filefox-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/filefox.png" alt="filefox"/></a>
+
+
+
+                <a title="usersdrive"
+                    href="https://www.nopremium.pl/usersdrive-premium"><img class="ServerLogo" src="https://www.nopremium.pl/images/servers/usersdrive.png" alt="usersdrive"/></a>
+
+
+            </div>
+        </div>
+    </div>
+    <!-- Support - Finish -->
+
+    <!-- Copyright -->
+    <div id="copyright">
+        <div class="wrapper">
+
+            <!-- GeoTrust-->
+            <div class="geotrust">
+                <img src="https://www.nopremium.pl/images/RapidSSL_SEAL-90x50.gif" alt="RapidSSL"/>
+            </div>
+
+            <!-- Copyright-->
+            <div class="copy">
+                © 2009 - 2024 by <span>NoPremium.pl</span> <br/>
+			Wszelkie prawa zastrzeżone.<br /><br />
+            </div>
+
+            <!-- Footer Menu-->
+            <div id="menu_footer">
+                <a href="https://www.nopremium.pl/home">Home</a>
+                <a rel="nofollow" href="https://www.nopremium.pl/offer">Doładuj konto</a>
+                <a rel="nofollow" href="https://www.nopremium.pl/files">Pobierz pliki</a>
+                <a href="https://www.nopremium.pl/tos">Regulamin</a>
+                <a href="https://www.nopremium.pl/faq">FAQ</a>
+                <a href="https://www.nopremium.pl/opinions">Opinie</a>
+
+                <a href="https://www.nopremium.pl/contact">Kontakt</a>
+            </div>
+
+        </div>
+    </div>
+    <!-- Copyright - Finish -->
+
+    <div id="copyright2">
+        <div class="wrapper">
+            <div class="copy" style="text-align: center;">
+                Korzystanie z serwisu oznacza akceptację regulaminu w aktualnym brzmieniu.
+                <br />
+            Nasza strona internetowa używa plików cookies (tzw. ciasteczka) w celach statystycznych, reklamowych oraz funkcjonalnych. Dzięki nim możemy indywidualnie dostosować stronę do twoich potrzeb. Każdy może zaakceptować pliki cookies albo ma możliwość wyłączenia ich w przeglądarce, dzięki czemu nie będą zbierane żadne informacje. Dowiedz się więcej jak je wyłączyć
+                <a style="cursor: pointer;" onclick="location.href='https://www.nopremium.pl/tos#cookies';">klikając
+                    tutaj</a>.
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-179720445-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'UA-179720445-2');
+    </script>
+
+
+
+
+</body>
+
+</html>

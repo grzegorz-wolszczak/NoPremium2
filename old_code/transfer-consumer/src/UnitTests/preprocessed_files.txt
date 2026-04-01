@@ -1,0 +1,51 @@
+﻿
+
+
+
+			<div class="subpage_subtitle universal_subtitle_ico" style="color: green;">Przetworzone pliki (1)</div>
+			<table class="table" style="margin-bottom:10px;">
+				<tbody>
+
+				<tr class="table_head downloadOK">
+					<td></td>
+					<td></td>
+					<td>Nazwa pliku</td>
+					<td>Rozmiar</td>
+				</tr>
+				 				<tr class="table_content">
+					<td style="width: 20px;"><input type="checkbox" id="hash0" name="hash0" value="405afb3408" onclick="UpdateCounter();" checked="true"/></td>
+					<td><img src="https://www.nopremium.pl/images/icons/servers/youtube.png" alt="youtube" title="youtube"/></td>
+					<td style="text-align: left;"><label for="hash0">Heroes 3: Żniwiarz Dusz #21 - Jaśnie pan barbarzyń<br />ca</label></td>
+					<td>417.5 MB</td>
+					<input type="hidden" id="charge0" value="437780700">
+				</tr>
+								</tbody>
+				</table>
+
+				<div class="info_notice blue" style="border-radius: 0px 0px 3px 3px;">
+
+
+
+				<input type="button" onclick="addFiles();" class="button yellow" style="float: left; margin-top: 8px; height:32px;" value="Dodaj zaznaczone">
+				<div class="input" style="display: inline; float: right;">
+					Transfer potrzebny na dodanie zaznaczonych plików: <input type="text" name="countSize" id="countSize" style="width:80px;" readonly="readonly" value="417.5 MB">
+				</div>
+
+
+				<p style="margin-top:50px; font-style:italic;">
+
+								</p>
+													<label for="mode">
+
+								<div id="modeCheckbox" class="info_notice" style="padding: 5px;">
+
+								<input name="mode" id="mode" type="checkbox" onclick="sEn();" value="1" checked="checked">
+								<strong>Pobierz na serwery</strong> (pobieranie plików na serwery NoPremium.pl - maksymalna prędkość pobierania na dysk użytkownika)
+								</div>
+								</label>
+
+
+                            											<span id="hh"></span>
+
+
+				</div>
