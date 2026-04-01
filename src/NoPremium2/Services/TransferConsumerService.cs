@@ -77,6 +77,8 @@ public sealed class TransferConsumerService : BackgroundService
             }
             catch (Exception ex)
             {
+                if (stoppingToken.IsCancellationRequested)
+                    break;
                 _logger.LogError(ex, "TransferConsumerService run failed");
                 try { await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); } catch { }
             }
@@ -93,7 +95,7 @@ public sealed class TransferConsumerService : BackgroundService
         {
             // Navigate to /files and read current transfer
             await page.GotoAsync("https://www.nopremium.pl/files",
-                new() { WaitUntil = Microsoft.Playwright.WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+                new() { WaitUntil = Microsoft.Playwright.WaitUntilState.Load, Timeout = 30_000 });
 
             var transferInfo = await _client.ReadTransferInfoAsync(page);
             if (transferInfo is null)

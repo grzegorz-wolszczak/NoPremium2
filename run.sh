@@ -5,6 +5,8 @@ base_dir="/media/gary/D_DRIVE/repos/NoPremium2/src/NoPremium2"
 bin_dir="bin/Debug/net10.0"
 app_name="NoPremium2"
 
+dir='/media/gary/D_DRIVE/repos/NoPremium2/src/NoPremium2/bin/Debug/net10.0'
+
 
 config_file_path="${HOME}/nopremium.config.json"
 
@@ -14,5 +16,5 @@ if [[ ! -f ${full_path} ]]; then
     exit 1
 fi
 echo "Running..."
-cd $base_dir
-dotnet run ${base_dir} -- ${HOME}/nopremium.config.json
+
+${full_path}  ${HOME}/nopremium.config.json

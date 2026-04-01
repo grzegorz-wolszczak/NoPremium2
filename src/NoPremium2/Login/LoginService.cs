@@ -35,14 +35,37 @@ public sealed class LoginService : ILoginService
             _logger.LogInformation("Already on login page: {Url}", page.Url);
         }
 
+        // Already logged in — server redirected away from /login
+        if (!page.Url.Contains("/login"))
+        {
+            _logger.LogInformation("Already logged in, redirected to: {Url}", page.Url);
+            return new LoginResult(true, page.Url);
+        }
+
         _logger.LogInformation("Waiting for login form (Cloudflare Turnstile)...");
         var loginForm = page.Locator("#login_box_form");
         var loginInput = loginForm.Locator("input[name='login']");
-        await loginInput.WaitForAsync(new LocatorWaitForOptions
+
+        // Race: either the login form appears (normal flow) OR the user already
+        // logged in manually (URL leaves /login before we could fill the form).
+        var waitForForm = loginInput.WaitForAsync(new LocatorWaitForOptions
         {
             State = WaitForSelectorState.Visible,
             Timeout = _settings.TurnstileTimeoutMs,
         });
+        var waitForManualLogin = page.WaitForURLAsync(
+            url => !url.Contains("/login"),
+            new PageWaitForURLOptions { Timeout = _settings.TurnstileTimeoutMs });
+
+        await Task.WhenAny(waitForForm, waitForManualLogin);
+
+        if (!page.Url.Contains("/login"))
+        {
+            _logger.LogInformation("Manual login detected, URL: {Url}", page.Url);
+            return new LoginResult(true, page.Url);
+        }
+
+        await waitForForm; // surface any real error if the form wait actually failed
 
         _logger.LogInformation("Form visible, filling credentials (login: {Login})", login);
         await loginInput.FillAsync(login);

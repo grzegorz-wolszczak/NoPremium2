@@ -71,9 +71,20 @@ public sealed class LoginServiceTests
         loginForm.Locator("input[name='login']").Returns(loginInput);
         loginForm.Locator("input[name='password']").Returns(passwordInput);
         page.Locator("#button_input").Returns(submitButton);
+
+        // Two calls to WaitForURLAsync in the new code:
+        //   1st = race for manual login — must NOT complete so the form-fill path is taken
+        //   2nd = post-submit wait — completes and advances the URL
+        int waitForUrlCallCount = 0;
         page.WaitForURLAsync(Arg.Any<Func<string, bool>>(), Arg.Any<PageWaitForURLOptions?>())
-            .Returns(Task.CompletedTask)
-            .AndDoes(_ => page.Url.Returns("https://www.nopremium.pl/settings?secure"));
+            .Returns(_ =>
+            {
+                waitForUrlCallCount++;
+                if (waitForUrlCallCount == 1)
+                    return (Task)new TaskCompletionSource<int>().Task; // race: never completes
+                page.Url.Returns("https://www.nopremium.pl/settings?secure");
+                return Task.CompletedTask;
+            });
 
         await CreateSut().LoginAsync(page, "testuser", "testpass");
 

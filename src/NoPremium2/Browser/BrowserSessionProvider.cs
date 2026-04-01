@@ -61,6 +61,11 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
             var page = await EnsureSessionAsync(ct);
             return await action(page);
         }
+        catch (Microsoft.Playwright.PlaywrightException) when (ct.IsCancellationRequested)
+        {
+            // Browser was closed as part of graceful shutdown — treat as cancellation.
+            throw new OperationCanceledException(ct);
+        }
         finally
         {
             _semaphore.Release();
@@ -105,7 +110,7 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
         return _session.Page;
     }
 
-    private static bool IsSessionAlive(BrowserSession session)
+    internal static bool IsSessionAlive(BrowserSession session)
     {
         try { return session.Browser.IsConnected && !session.Page.IsClosed; }
         catch { return false; }
@@ -113,11 +118,12 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
 
     public async ValueTask DisposeAsync()
     {
-        if (_session is null) return;
+        var session = Interlocked.Exchange(ref _session, null);
+        if (session is null) return;
         try
         {
-            _session.KillOwnedBrowser();
-            _session.Dispose();
+            session.KillOwnedBrowser();
+            session.Dispose();
         }
         catch (Exception ex)
         {

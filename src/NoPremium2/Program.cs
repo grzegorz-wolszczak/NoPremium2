@@ -76,19 +76,20 @@ internal sealed class Program
         bootstrapLogger.Information("Browser: {Browser}", useChrome ? $"Chrome ({chromePath})" : $"Vivaldi ({vivaldiPath})");
 
         // ─────────────────────────────────────────────────────────────────────
-        // 6.  Configure Serilog with file rotation
+        // 6.  Configure Serilog with per-run log file
         // ─────────────────────────────────────────────────────────────────────
-        string logDir = Path.Combine(AppContext.BaseDirectory, "Logi");
+        string logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
         Directory.CreateDirectory(logDir);
-        string logFileTemplate = Path.Combine(logDir, "logi_.log");
+
+        var now = DateTime.Now;
+        string logFile = LogFileHelper.ResolveLogFilePath(logDir, now);
+        LogFileHelper.DeleteOldLogs(logDir, now);
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
             .WriteTo.File(
-                logFileTemplate,
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 30,
+                logFile,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
 
@@ -218,10 +219,10 @@ internal sealed class Program
         }
         finally
         {
+            // host.RunAsync() already disposes the host (incl. DI container → BrowserSessionProvider).
+            // Only flush logs and release the single-instance lock here.
             await Log.CloseAndFlushAsync();
             instanceGuard.Dispose();
-            if (sessionProvider is IAsyncDisposable asyncDisposable)
-                await asyncDisposable.DisposeAsync();
         }
     }
 

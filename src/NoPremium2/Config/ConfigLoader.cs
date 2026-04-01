@@ -133,7 +133,7 @@ public static class ConfigLoader
         return (parts[0], port);
     }
 
-    private static AppConfig ApplyDefaults(AppConfig config)
+    internal static AppConfig ApplyDefaults(AppConfig config)
     {
         var tc = config.TransferConsumer;
         var vc = config.VoucherConsumer;

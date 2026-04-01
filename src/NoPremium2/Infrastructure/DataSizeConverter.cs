@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace NoPremium2.Infrastructure;
 
 public static class DataSizeConverter
@@ -35,15 +37,18 @@ public static class DataSizeConverter
         throw new FormatException($"Cannot parse size string: '{sizeStr}'");
     }
 
-    /// <summary>Formats bytes as a human-readable string.</summary>
+    /// <summary>Formats bytes as a human-readable string, e.g. "10.23GB (10737418240 b)".</summary>
     public static string FormatBytes(long bytes)
     {
         if (bytes >= 1024L * 1024 * 1024)
-            return $"{bytes / (1024.0 * 1024 * 1024):F2} GB";
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{bytes / (1024.0 * 1024 * 1024):F2}GB ({bytes} b)");
         if (bytes >= 1024L * 1024)
-            return $"{bytes / (1024.0 * 1024):F2} MB";
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{bytes / (1024.0 * 1024):F2}MB ({bytes} b)");
         if (bytes >= 1024L)
-            return $"{bytes / 1024.0:F2} KB";
-        return $"{bytes} B";
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{bytes / 1024.0:F2}KB ({bytes} b)");
+        return $"{bytes} b";
     }
 }

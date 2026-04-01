@@ -106,12 +106,26 @@ public sealed class NoPremiumBrowserClient
         var urlList = urls.ToList();
         if (urlList.Count == 0) return 0;
 
-        _logger.LogInformation("Navigating to /files to queue {Count} link(s)", urlList.Count);
-        await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        if (!page.Url.Contains("/files"))
+        {
+            _logger.LogInformation("Navigating to /files to queue {Count} link(s)", urlList.Count);
+            await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.Load, Timeout = 30_000 });
+        }
+        else
+        {
+            _logger.LogInformation("Already on /files, queuing {Count} link(s)", urlList.Count);
+        }
+
+        // Guard: if server redirected us away from /files (e.g. session expired → login page), fail fast
+        if (!page.Url.Contains("/files"))
+        {
+            throw new InvalidOperationException(
+                $"Navigation to /files was redirected to '{page.Url}'. Session may have expired.");
+        }
 
         // Fill the links textarea. From old code, the form field name is 'links'.
         var textarea = page.Locator("textarea[name='links']");
-        await textarea.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10_000 });
+        await textarea.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await textarea.FillAsync(string.Join("\n", urlList));
 
         // Click the submit button. It's near the textarea and says "Dodaj" (exact match avoids "Dodaj zaznaczone")

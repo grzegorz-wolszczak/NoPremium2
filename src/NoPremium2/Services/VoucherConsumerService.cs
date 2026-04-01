@@ -71,6 +71,8 @@ public sealed class VoucherConsumerService : BackgroundService
             }
             catch (Exception ex)
             {
+                if (stoppingToken.IsCancellationRequested)
+                    break;
                 _logger.LogError(ex, "VoucherConsumerService run failed");
                 try { await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); } catch { }
             }
