@@ -1,70 +1,219 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NoPremium2;
 using NoPremium2.Browser;
+using NoPremium2.Config;
+using NoPremium2.Email;
+using NoPremium2.Infrastructure;
 using NoPremium2.Login;
+using NoPremium2.NoPremium;
+using NoPremium2.Services;
+using Serilog;
 
-string login = GetRequiredEnv("NPREMIUM_P");
-string password = GetRequiredEnv("NPREMIUM_U");
+// ─────────────────────────────────────────────────────────────────────────────
+// 1.  Parse CLI argument: path to config file
+// ─────────────────────────────────────────────────────────────────────────────
+if (args.Length == 0)
+{
+    Console.Error.WriteLine("[STARTUP ERROR] Usage: NoPremium2 <path-to-config.json>");
+    Environment.Exit(1);
+}
 
-var services = new ServiceCollection();
+string configFilePath = args[0];
 
-services.AddLogging(b => b
-    .SetMinimumLevel(LogLevel.Debug)
-    .AddSimpleConsole(o => { o.TimestampFormat = "[HH:mm:ss] "; o.SingleLine = true; }));
+// ─────────────────────────────────────────────────────────────────────────────
+// 2.  Bootstrap minimal logger for startup diagnostics
+// ─────────────────────────────────────────────────────────────────────────────
+var bootstrapLogger = new LoggerConfiguration()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
-var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+bootstrapLogger.Information("NoPremium2 starting up");
 
-services.AddSingleton(new AppSettings());
-services.AddSingleton<HttpClient>(http);
-services.AddSingleton<ICdpChecker, HttpCdpChecker>();
-services.AddSingleton<IProcessCmdlineReader, LinuxProcessCmdlineReader>();
-services.AddSingleton<ICdpPortDiscovery, CdpPortDiscovery>();
-services.AddSingleton<IPortAllocator, PortAllocator>();
-services.AddSingleton<IVivaldiLauncher, VivaldiLauncher>();
-services.AddSingleton<IBrowserConnector, PlaywrightBrowserConnector>();
-services.AddSingleton<IBrowserManager, BrowserManager>();
-services.AddSingleton<ILoginService, LoginService>();
+// ─────────────────────────────────────────────────────────────────────────────
+// 3.  Load and validate configuration
+// ─────────────────────────────────────────────────────────────────────────────
+var msBootstrapLogger = new LoggerFactory().AddSerilog(bootstrapLogger).CreateLogger<object>();
+// ConfigLoader calls Environment.Exit(1) on any validation error
+AppConfig config = ConfigLoader.LoadAppConfig(configFilePath, msBootstrapLogger);
+LinksConfig links = ConfigLoader.LoadLinksConfig(config.LinksFilePath);
+var (imapHost, imapPort) = ConfigLoader.ParseImapServer(config.EmailImapServer);
 
-await using var provider = services.BuildServiceProvider();
+// ─────────────────────────────────────────────────────────────────────────────
+// 4.  Single instance guard
+// ─────────────────────────────────────────────────────────────────────────────
+var instanceGuard = new SingleInstanceGuard();
+if (!instanceGuard.TryAcquire(out int? existingPid, out DateTime? existingStart))
+{
+    var startedAt = existingStart.HasValue ? $", started at {existingStart:yyyy-MM-dd HH:mm:ss}" : "";
+    Console.Error.WriteLine(
+        $"[STARTUP ERROR] Another instance of NoPremium2 is already running (PID {existingPid}{startedAt}). Exiting.");
+    Environment.Exit(1);
+}
 
-var logger = provider.GetRequiredService<ILogger<Program>>();
-var browserManager = provider.GetRequiredService<IBrowserManager>();
-var loginService = provider.GetRequiredService<ILoginService>();
+// ─────────────────────────────────────────────────────────────────────────────
+// 5.  Detect browser (Chrome > Vivaldi)
+// ─────────────────────────────────────────────────────────────────────────────
+string? chromePath = ChromeLauncher.FindExecutable();
+string? vivaldiPath = VivaldiLauncher.FindExecutable();
 
-logger.LogInformation("Starting NoPremium2");
+if (chromePath is null && vivaldiPath is null)
+{
+    Console.Error.WriteLine(
+        "[STARTUP ERROR] No supported browser found. Please install Google Chrome or Vivaldi.");
+    instanceGuard.Dispose();
+    Environment.Exit(1);
+}
 
-BrowserSession? session = null;
+bool useChrome = chromePath is not null;
+bootstrapLogger.Information("Browser: {Browser}", useChrome ? $"Chrome ({chromePath})" : $"Vivaldi ({vivaldiPath})");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6.  Configure Serilog with file rotation
+// ─────────────────────────────────────────────────────────────────────────────
+string logDir = Path.Combine(AppContext.BaseDirectory, "Logi");
+Directory.CreateDirectory(logDir);
+string logFileTemplate = Path.Combine(logDir, "logi_.log");
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        logFileTemplate,
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7.  Log effective configuration (passwords masked)
+// ─────────────────────────────────────────────────────────────────────────────
+Log.Information("=== NoPremium2 Configuration ===");
+Log.Information("Config file:              {Path}", configFilePath);
+Log.Information("Links file:               {Path}", config.LinksFilePath);
+Log.Information("Links count:              {Count}", links.Links.Count);
+Log.Information("NoPremium username:       {User}", config.NoPremiumUsername);
+Log.Information("NoPremium password:       {Pass}", "***");
+Log.Information("Email username:           {User}", config.EmailUsername);
+Log.Information("Email password:           {Pass}", "***");
+Log.Information("Email IMAP:               {Host}:{Port}", imapHost, imapPort);
+Log.Information("Transfer consumer:        {Start}–{End} every {Interval} min, reserve {Reserve} bytes",
+    config.TransferConsumer.StartTime, config.TransferConsumer.EndTime,
+    config.TransferConsumer.IntervalMinutes, config.TransferConsumer.ReserveTransferBytes);
+Log.Information("Voucher consumer:         {Start}–{End} every {Interval} min",
+    config.VoucherConsumer.StartTime, config.VoucherConsumer.EndTime, config.VoucherConsumer.IntervalMinutes);
+Log.Information("Keepalive interval:       {Interval}", config.KeepaliveInterval);
+Log.Information("================================");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8.  Build the DI host
+// ─────────────────────────────────────────────────────────────────────────────
+var host = Host.CreateDefaultBuilder(args)
+    .UseSerilog()
+    .ConfigureServices((_, services) =>
+    {
+        // Configuration objects
+        services.AddSingleton(config);
+        services.AddSingleton(links);
+
+        // AppSettings (used by existing LoginService / BrowserManager)
+        services.AddSingleton(AppSettings.From(config));
+
+        // HTTP client (for CDP check + NTP time service)
+        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        services.AddSingleton(http);
+
+        // Infrastructure
+        services.AddSingleton<ITimeService, TimeService>();
+
+        // Browser infrastructure
+        services.AddSingleton<ICdpChecker, HttpCdpChecker>();
+        services.AddSingleton<IProcessCmdlineReader, LinuxProcessCmdlineReader>();
+        services.AddSingleton<ICdpPortDiscovery, CdpPortDiscovery>();
+        services.AddSingleton<IPortAllocator, PortAllocator>();
+        services.AddSingleton<IBrowserConnector, PlaywrightBrowserConnector>();
+        services.AddSingleton<IBrowserManager, BrowserManager>();
+
+        // Register the correct browser launcher based on detection
+        if (useChrome)
+            services.AddSingleton<IVivaldiLauncher, ChromeLauncher>();
+        else
+            services.AddSingleton<IVivaldiLauncher, VivaldiLauncher>();
+
+        // Login service
+        services.AddSingleton<ILoginService, LoginService>();
+
+        // Browser session provider (shared between all services)
+        services.AddSingleton<IBrowserSessionProvider, BrowserSessionProvider>();
+
+        // Email
+        services.AddSingleton(new VoucherCodeExtractor());
+        services.AddSingleton<IEmailService>(sp => new EmailService(
+            imapHost, imapPort,
+            config.EmailUsername, config.EmailPassword,
+            sp.GetRequiredService<VoucherCodeExtractor>(),
+            sp.GetRequiredService<ILogger<EmailService>>()));
+
+        // NoPremium browser client
+        services.AddSingleton<NoPremiumBrowserClient>();
+
+        // Hosted background services
+        services.AddHostedService<KeepaliveService>();
+        services.AddHostedService<TransferConsumerService>();
+        services.AddHostedService<VoucherConsumerService>();
+    })
+    .Build();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9.  Startup verification: login to nopremium + test email connection
+// ─────────────────────────────────────────────────────────────────────────────
+var startupLogger = host.Services.GetRequiredService<ILogger<Program>>();
+var sessionProvider = host.Services.GetRequiredService<IBrowserSessionProvider>();
+var emailService = host.Services.GetRequiredService<IEmailService>();
+
+using var startupCts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+
 try
 {
-    session = await browserManager.GetOrLaunchAsync();
-    var result = await loginService.LoginAsync(session.Page, login, password);
-
-    if (result.Success)
-    {
-        logger.LogInformation("Login successful — browser stays open");
-        // Not killing the browser — user can continue working with it
-    }
-    else
-    {
-        logger.LogWarning("Login failed at: {Url}", result.FinalUrl);
-        if (session.IsOwned)
-        {
-            logger.LogInformation("Closing owned browser");
-            session.KillOwnedBrowser();
-        }
-    }
+    startupLogger.LogInformation("Startup check: launching browser and logging in to nopremium.pl...");
+    await sessionProvider.InitializeAsync(startupCts.Token);
+    startupLogger.LogInformation("Startup check: nopremium.pl login OK");
 }
 catch (Exception ex)
 {
-    logger.LogError(ex, "Unexpected error");
-    session?.KillOwnedBrowser();
+    startupLogger.LogError(ex, "Startup check FAILED: could not log in to nopremium.pl");
+    instanceGuard.Dispose();
+    Environment.Exit(1);
+}
+
+try
+{
+    startupLogger.LogInformation("Startup check: testing email (IMAP) connection...");
+    // Just connect and check — we don't want to consume vouchers during startup check
+    await emailService.GetUnreadVouchersAsync(startupCts.Token);
+    startupLogger.LogInformation("Startup check: email connection OK");
+}
+catch (Exception ex)
+{
+    startupLogger.LogError(ex, "Startup check FAILED: could not connect to email server");
+    instanceGuard.Dispose();
+    Environment.Exit(1);
+}
+
+startupLogger.LogInformation("All startup checks passed. Starting background services...");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. Run until Ctrl+C
+// ─────────────────────────────────────────────────────────────────────────────
+try
+{
+    await host.RunAsync();
 }
 finally
 {
-    session?.Dispose(); // Disposes Playwright connection; does NOT kill browser process
+    await Log.CloseAndFlushAsync();
+    instanceGuard.Dispose();
+    if (sessionProvider is IAsyncDisposable asyncDisposable)
+        await asyncDisposable.DisposeAsync();
 }
-
-static string GetRequiredEnv(string name) =>
-    Environment.GetEnvironmentVariable(name)
-    ?? throw new InvalidOperationException($"Missing environment variable: {name}");

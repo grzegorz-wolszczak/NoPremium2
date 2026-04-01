@@ -40,19 +40,26 @@ public sealed class CdpPortDiscovery : ICdpPortDiscovery
         _logger = logger;
     }
 
+    // Process names to check, in priority order (Chrome > Vivaldi)
+    private static readonly string[] BrowserProcessNames =
+        new[] { "chrome", "google-chrome", "chromium", "chromium-browser", "vivaldi" };
+
     public async Task<int?> FindExistingPortAsync()
     {
-        foreach (var (pid, cmdline) in _cmdlineReader.GetByName("vivaldi"))
+        foreach (var browserName in BrowserProcessNames)
         {
-            int? port = ParsePort(cmdline);
-            if (port is null) continue;
-            if (await _cdpChecker.IsRespondingAsync(port.Value))
+            foreach (var (pid, cmdline) in _cmdlineReader.GetByName(browserName))
             {
-                _logger.LogDebug("Found Vivaldi (PID {Pid}) with CDP on port {Port}", pid, port);
-                return port;
+                int? port = ParsePort(cmdline);
+                if (port is null) continue;
+                if (await _cdpChecker.IsRespondingAsync(port.Value))
+                {
+                    _logger.LogDebug("Found {Browser} (PID {Pid}) with CDP on port {Port}", browserName, pid, port);
+                    return port;
+                }
             }
         }
-        _logger.LogDebug("No existing Vivaldi with open CDP port found");
+        _logger.LogDebug("No existing browser with open CDP port found");
         return null;
     }
 

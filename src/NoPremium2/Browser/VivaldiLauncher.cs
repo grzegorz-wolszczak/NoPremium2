@@ -11,6 +11,12 @@ public interface IVivaldiLauncher
 
 public sealed class VivaldiLauncher : IVivaldiLauncher
 {
+    private static readonly string[] CandidatePaths =
+        new[] { "/usr/bin/vivaldi", "/usr/bin/vivaldi-stable" };
+
+    public static string? FindExecutable() =>
+        CandidatePaths.FirstOrDefault(File.Exists);
+
     private readonly AppSettings _settings;
     private readonly ICdpChecker _cdpChecker;
     private readonly ILogger<VivaldiLauncher> _logger;

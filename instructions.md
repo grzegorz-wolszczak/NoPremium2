@@ -56,20 +56,53 @@ Po uruchomieniu aplikacja uruchomi więc przeglądarkę i utrzymując ją cały 
 ## Wymagania
 
 ### Wymagania funkcjonalne
-- Aplikacja musi uodstępniać możliwość podania pliku konfiguracyjnego jako parametr wejściowy ( format pliku: json). Tam powinny być możliwe do podania następujące wartości konfiguracyjne.
-    - (wymagany) Email user account
-    - (wymagany) Email user password
-    - (wymagany) Email login page - uwaga : odczytaj ze starego kodu gdzie była ta strona do logowania
-    - (wymagany) Nopremium user account
-    - (wymagany) Nopremium user password
-    - (opcjonalny) Godzina startowa od której voucher-consumer ma zacząć swoje działanie (np 23:00) : default: 23:00
-    - (opcjonalny) Godzina końcowa o której voucher-consumer ma zakóńczyć swoje działanie (np 23:55): default: 23:55
-    - (opcjonalny) Intervał jaki ma dzielić poszczególne uruchomienia vocher-consumer w minutach (np 5) default: 5
-      Jeżeli wartości domyśłnie zostaną podane użyj defaultów
-      Jeżali jakaś wartość wymagana nie zostanie podana - progam ma sie zakończyć informując czego brakowało .Zbiorczo czyli jeżeli brakowało wiecej niż jednego to aplikacja ma wyświetlać wszystkich których nie było.
-    -
-- Musi być możliwość przerwania działania aplikacji  po niaciśnięciu Ctrl+C
-- Aplikacja ma supportuwoać przegląarki chrome oraz vivaldi. Na starcie musi wykryć która z nich jest zainstalowana w systemie. Jeżeli żadna to apliacja ma się zakóńczyć z błędem. Jeżeli sa dwie to priorytet ma chrome a potem vivalid.
+- Aplikacja musi udostępniać możliwość podania pliku konfiguracyjnego jako parametr wejściowy (format pliku: json). Tam powinny być możliwe do podania następujące wartości konfiguracyjne.
+
+    **Wymagane:**
+    - Email user account (login do konta email)
+    - Email user password (hasło do konta email)
+    - Email IMAP server — adres serwera IMAP wraz z portem, np. `"imap.gmx.com:993"` (ze starego kodu: `imap.gmx.com`, port `993`, SSL)
+    - Nopremium user account
+    - Nopremium user password
+    - Ścieżka do pliku z listą linków do konsumpcji transferu (plik JSON, format opisany niżej). Jeżeli plik nie istnieje lub nie da się go odczytać — aplikacja ma nie wystartować i podać czytelny błąd.
+
+    **Opcjonalne — voucher-consumer:**
+    - Godzina startowa od której voucher-consumer ma zacząć swoje działanie (np. `"23:00"`) — default: `"23:00"`
+    - Godzina końcowa o której voucher-consumer ma zakończyć swoje działanie (np. `"23:55"`) — default: `"23:55"`
+    - Interwał (w minutach) jaki ma dzielić poszczególne uruchomienia voucher-consumera (np. `5`) — default: `5`
+
+    **Opcjonalne — transfer-consumer:**
+    - Godzina startowa od której transfer-consumer ma zacząć swoje działanie (np. `"23:00"`) — default: `"23:00"`
+    - Godzina końcowa o której transfer-consumer ma zakończyć swoje działanie (np. `"23:55"`) — default: `"23:55"`
+    - Interwał (w minutach) jaki ma dzielić poszczególne uruchomienia transfer-consumera (np. `5`) — default: `5`
+    - Minimalna rezerwa transferu premium w bajtach — ilość bajtów transferu premium jaka ma zostać zachowana (nie skonsumowana). Default: `3221225472` (3 GB). Jednostka: bajty (tak jak w starym kodzie).
+
+    **Opcjonalne — ogólne:**
+    - Interwał keepalive — jak często aplikacja ma robić "jałowe" przejście po stronie nopremium.pl w celu podtrzymania sesji. Format: `"HH:mm:ss"`, np. `"01:00:00"`. Default: `"01:00:00"`.
+
+    **Zasady obsługi wartości opcjonalnych:**
+    - Plik konfiguracyjny powinien zawierać wszystkie opcjonalne pola wypełnione wartościami domyślnymi (aby użytkownik wiedział jakie są dostępne opcje).
+    - Jeżeli użytkownik usunie wpis z pliku lub ustawi wartość na pusty string `""` lub `null` — aplikacja ma to obsłużyć gracefully (nie crashować) i użyć zakodowanej na stałe wartości domyślnej.
+    - Jeżeli jakaś wartość **wymagana** nie zostanie podana — program ma się zakończyć informując o wszystkich brakujących polach (zbiorczo).
+
+- Musi być możliwość przerwania działania aplikacji po naciśnięciu Ctrl+C.
+- Aplikacja ma supportować przeglądarki Chrome oraz Vivaldi. Na starcie musi wykryć która z nich jest zainstalowana w systemie. Jeżeli żadna — aplikacja ma się zakończyć z błędem. Jeżeli są obie — priorytet ma Chrome, potem Vivaldi.
+
+### Format pliku z linkami do konsumpcji transferu
+
+Plik JSON zawierający tablicę linków, podobny do starego `nopremium.config.json` z transfer-consumera. Format:
+```json
+{
+  "Links": [
+    {
+      "Name": "Nazwa pliku",
+      "Url": "https://...",
+      "Size": "512MB"
+    }
+  ]
+}
+```
+Pole `Size` podawane jako string z jednostką (MB, GB) — tak jak w starym kodzie. Aplikacja nie startuje jeśli plik nie istnieje lub nie da się go sparsować.
 
 ### Start aplikacji
 Aplikacja powinna nie wystartowąć t.j zgłosić błąd przy starcie na std output i wyjsć z kodem błędu 1 jezeli:
@@ -94,3 +127,44 @@ Pliki z logami musi być rotowany - to znaczy - jeżeli jakaś akcja została wy
 
 
 - W celu 'podtrzymania sesji przeglądarki' aplikacja od czasu do czasu będzie robiła 'jałowe' przejścia do stron w stylu https://www.nopremium.pl/help albo https://www.nopremium.pl/offer tylko po to żęby strona wykryła ruch i możliwe że odświerzyła sobie jakieś cistaczka czy inne numery sessji , tak by nie cloudlflare zawsze myślał że użytkonik siedi przy komputerzenie i wymagała ponownego klikania w okienko "udowodnij że jesteś człowiekm"
+
+---
+
+## Ustalenia dodatkowe (uzupełnienia z Q&A — nie ujęte w pierwotnym pliku)
+
+### Konfiguracja email
+Pole "Email login page" z pierwotnych wymagań oznacza konfigurację IMAP. W pliku konfiguracyjnym powinno być jedno pole w formacie `"host:port"`, np. `"imap.gmx.com:993"`. Połączenie zawsze używa SSL. Aplikacja parsuje ten string rozdzielając po `:`.
+
+### Plik z linkami (transfer-consumer)
+- Ścieżka do pliku jest **wymaganym** parametrem w głównym pliku konfiguracyjnym.
+- Format pliku: JSON z tablicą `Links`, każdy element ma pola `Name` (string), `Url` (string), `Size` (string z jednostką np. `"512MB"`, `"3GB"`). Identyczny format jak stary `nopremium.config.json` z transfer-consumera (bez pola `PreserveTransferBytes` — to idzie teraz do głównego configa).
+- Jeżeli plik nie istnieje lub nie da się go odczytać/sparsować — aplikacja nie startuje i wyświetla czytelny błąd.
+
+### Harmonogramy (transfer-consumer i voucher-consumer)
+Oba serwisy mają **niezależne** zestawy parametrów harmonogramu w konfiguracji:
+- Godzina startowa
+- Godzina końcowa
+- Interwał w minutach
+
+Pierwsze uruchomienie danego serwisu następuje o godzinie startowej zakresu, następne co `interwał` minut, ostatnie przed godziną końcową.
+
+### Rezerwa transferu premium
+Opcjonalny parametr w konfiguracji (bajty, long). Default: `3221225472` (3 GB). Transfer-consumer zatrzymuje konsumpcję gdy ilość pozostałego transferu premium spadnie do lub poniżej tej wartości.
+
+### Keepalive
+Opcjonalny parametr w konfiguracji, format `"HH:mm:ss"`, np. `"01:00:00"`. Default: `"01:00:00"` (1 godzina). Aplikacja w osobnym wątku/timerze co ten interwał nawiguje przeglądarką do jednej ze stron podtrzymujących sesję (np. `/help`, `/offer`).
+
+### Interakcja z nopremium.pl
+Wszystkie operacje na stronie **nopremium.pl** (logowanie, dodawanie linków do kolejki, konsumowanie voucherów) wykonywane są **przez przeglądarkę** (Playwright, klikanie w elementy strony) — nie przez HttpClient. Aplikacja utrzymuje otwartą przeglądarkę przez cały czas działania.
+
+### Komunikacja z serwerem email (IMAP)
+Do odczytu emaili z voucherami **NIE jest potrzebna przeglądarka**. Wystarczy zwykły klient IMAP (biblioteka MailKit) — tak jak robiła to stara aplikacja voucher-consumer. Przeglądarka jest potrzebna tylko do zaredeemowania kodów na stronie nopremium.pl.
+
+### Poświadczenia — tylko z pliku konfiguracyjnego
+W nowej implementacji poświadczenia (nopremium i email) pochodzą **wyłącznie z pliku JSON** podanego jako argument CLI. Zmienne środowiskowe nie są obsługiwane (inaczej niż sugerowały pierwotne wymagania).
+
+**Konsumpcja transferu** = dodanie linku do kolejki pobierania na stronie `/files` — dokładnie tak jak robi to użytkownik ręcznie przez formularz na stronie. Stary kod robił to samo przez HTTP POST.
+
+### Obsługa wartości opcjonalnych w konfigu
+- Plik konfiguracyjny powinien mieć opcjonalne pola wstępnie wypełnione wartościami domyślnymi (jako dokumentacja dla użytkownika).
+- Jeżeli pole jest nieobecne, `null` lub pusty string `""` — aplikacja gracefully używa zakodowanej wartości domyślnej (nie crashuje).

@@ -1,0 +1,20 @@
+{
+  "NoPremiumUsername": "twoj_login@example.com",
+  "NoPremiumPassword": "twoje_haslo_nopremium",
+  "EmailUsername": "twoj_email@gmx.com",
+  "EmailPassword": "twoje_haslo_email",
+  "EmailImapServer": "imap.gmx.com:993",
+  "LinksFilePath": "/path/to/links.json",
+  "TransferConsumer": {
+    "StartTime": "23:00",
+    "EndTime": "23:55",
+    "IntervalMinutes": 5,
+    "ReserveTransferBytes": 3221225472
+  },
+  "VoucherConsumer": {
+    "StartTime": "23:00",
+    "EndTime": "23:55",
+    "IntervalMinutes": 5
+  },
+  "KeepaliveInterval": "01:00:00"
+}

@@ -45,7 +45,7 @@ public sealed class BrowserManager : IBrowserManager
         {
             cdpPort = existingPort.Value;
             isOwned = false;
-            _logger.LogInformation("Using existing Vivaldi CDP on port {Port}", cdpPort);
+            _logger.LogInformation("Using existing browser CDP on port {Port}", cdpPort);
         }
         else
         {
