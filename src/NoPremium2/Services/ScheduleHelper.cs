@@ -59,6 +59,31 @@ internal static class ScheduleHelper
         return todayTarget.AddDays(1) - now;
     }
 
+    /// <summary>
+    /// Returns true if two time-of-day ranges share any time. Handles midnight-crossing ranges
+    /// (e.g. 23:00–01:00 where start &gt; end).
+    /// </summary>
+    public static bool SchedulesOverlap(TimeOnly s1, TimeOnly e1, TimeOnly s2, TimeOnly e2)
+    {
+        bool aCrosses = s1 > e1;
+        bool bCrosses = s2 > e2;
+
+        if (!aCrosses && !bCrosses)
+            // Both normal ranges: overlap iff [s1,e1] ∩ [s2,e2] is non-empty
+            return s1 <= e2 && s2 <= e1;
+
+        if (aCrosses && bCrosses)
+            // Both cross midnight → both include midnight
+            return true;
+
+        if (aCrosses)
+            // A covers [s1,24h) ∪ [0,e1]; B covers [s2,e2]
+            return e2 >= s1 || s2 <= e1;
+
+        // B crosses, A does not — symmetric
+        return e1 >= s2 || s1 <= e2;
+    }
+
     public static TimeOnly ParseTimeOnly(string timeStr, string defaultValue = DefaultConstants.ScheduleStartTime)
     {
         if (string.IsNullOrWhiteSpace(timeStr))

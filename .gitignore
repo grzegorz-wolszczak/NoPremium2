@@ -1,4 +1,7 @@
 
+**/sessions
+
+
 #last update 2025-06-03
 # Ai tools folders that might contain secrets
 .claude/

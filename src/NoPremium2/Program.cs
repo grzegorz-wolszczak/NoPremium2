@@ -44,6 +44,7 @@ internal sealed class Program
         AppConfig config = ConfigLoader.LoadAppConfig(configFilePath, msBootstrapLogger);
         LinksConfig links = ConfigLoader.LoadLinksConfig(configFilePath, config);
         ValidateLinks(links, configFilePath);
+        ValidateScheduleOverlap(config);
         var (imapHost, imapPort) = ConfigLoader.ParseImapServer(config.EmailImapServer);
 
         // ─────────────────────────────────────────────────────────────────────
@@ -133,6 +134,7 @@ internal sealed class Program
 
                 // Infrastructure
                 services.AddSingleton<ITimeService, TimeService>();
+                services.AddSingleton<NoPremium2.Infrastructure.SessionPageSaver>();
 
                 // Browser infrastructure
                 services.AddSingleton<ICdpChecker, HttpCdpChecker>();
@@ -164,6 +166,9 @@ internal sealed class Program
 
                 // NoPremium browser client
                 services.AddSingleton<NoPremiumBrowserClient>();
+
+                // Shared consumer activity state (used to pause keepalive during consumer runs)
+                services.AddSingleton<ConsumerActivityState>();
 
                 // Hosted background services
                 services.AddHostedService<KeepaliveService>();
@@ -223,6 +228,30 @@ internal sealed class Program
             // Only flush logs and release the single-instance lock here.
             await Log.CloseAndFlushAsync();
             instanceGuard.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Validates that the TransferConsumer and VoucherConsumer schedules do not overlap.
+    /// Calls Environment.Exit(1) if they do.
+    /// </summary>
+    private static void ValidateScheduleOverlap(AppConfig config)
+    {
+        var tc = config.TransferConsumer;
+        var vc = config.VoucherConsumer;
+
+        var tcStart = Services.ScheduleHelper.ParseTimeOnly(tc.StartTime, Config.DefaultConstants.ScheduleStartTime);
+        var tcEnd   = Services.ScheduleHelper.ParseTimeOnly(tc.EndTime,   Config.DefaultConstants.ScheduleEndTime);
+        var vcStart = Services.ScheduleHelper.ParseTimeOnly(vc.StartTime, Config.DefaultConstants.ScheduleStartTime);
+        var vcEnd   = Services.ScheduleHelper.ParseTimeOnly(vc.EndTime,   Config.DefaultConstants.ScheduleEndTime);
+
+        if (Services.ScheduleHelper.SchedulesOverlap(tcStart, tcEnd, vcStart, vcEnd))
+        {
+            Console.Error.WriteLine(
+                $"[STARTUP ERROR] TransferConsumer schedule ({tc.StartTime}–{tc.EndTime}) overlaps with " +
+                $"VoucherConsumer schedule ({vc.StartTime}–{vc.EndTime}). " +
+                "These schedules must not overlap to avoid browser navigation conflicts.");
+            Environment.Exit(1);
         }
     }
 

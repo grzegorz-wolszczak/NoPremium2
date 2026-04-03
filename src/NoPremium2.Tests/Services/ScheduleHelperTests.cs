@@ -151,4 +151,67 @@ public sealed class ScheduleHelperTests
     public void ParseTimeOnly_CustomDefault_UsedWhenInputEmpty()
         => ScheduleHelper.ParseTimeOnly("", "08:00")
             .Should().Be(new TimeOnly(8, 0));
+
+    // ── SchedulesOverlap ──────────────────────────────────────────────
+
+    [Fact]
+    public void SchedulesOverlap_IdenticalRanges_ReturnsTrue()
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(23, 0), new TimeOnly(23, 55),
+            new TimeOnly(23, 0), new TimeOnly(23, 55))
+           .Should().BeTrue();
+
+    [Fact]
+    public void SchedulesOverlap_PartialOverlap_ReturnsTrue()
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(18, 0), new TimeOnly(22, 0),
+            new TimeOnly(21, 0), new TimeOnly(23, 0))
+           .Should().BeTrue();
+
+    [Fact]
+    public void SchedulesOverlap_NonOverlapping_SeparateWindows_ReturnsFalse()
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(18, 0), new TimeOnly(22, 0),
+            new TimeOnly(23, 0), new TimeOnly(23, 55))
+           .Should().BeFalse();
+
+    [Fact]
+    public void SchedulesOverlap_AdjacentRanges_ReturnsFalse()
+        // 18:00–22:00 and 22:01–23:00 — touch but don't share any minute
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(18, 0), new TimeOnly(22, 0),
+            new TimeOnly(22, 1), new TimeOnly(23, 0))
+           .Should().BeFalse();
+
+    [Fact]
+    public void SchedulesOverlap_TouchingAtBoundary_ReturnsTrue()
+        // 18:00–22:00 and 22:00–23:00 — share 22:00
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(18, 0), new TimeOnly(22, 0),
+            new TimeOnly(22, 0), new TimeOnly(23, 0))
+           .Should().BeTrue();
+
+    [Fact]
+    public void SchedulesOverlap_BothCrossMidnight_ReturnsTrue()
+        // Both cross midnight → both cover midnight
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(23, 0), new TimeOnly(1, 0),
+            new TimeOnly(22, 0), new TimeOnly(2, 0))
+           .Should().BeTrue();
+
+    [Fact]
+    public void SchedulesOverlap_OneCrossesMidnight_OtherDoesNot_Overlapping_ReturnsTrue()
+        // A = 23:00–01:00 (crosses midnight), B = 00:30–02:00 (normal, inside A's post-midnight part)
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(23, 0), new TimeOnly(1, 0),
+            new TimeOnly(0, 30), new TimeOnly(2, 0))
+           .Should().BeTrue();
+
+    [Fact]
+    public void SchedulesOverlap_OneCrossesMidnight_OtherDoesNot_NonOverlapping_ReturnsFalse()
+        // A = 23:00–01:00 (crosses midnight), B = 02:00–20:00 (normal, outside A entirely)
+        => ScheduleHelper.SchedulesOverlap(
+            new TimeOnly(23, 0), new TimeOnly(1, 0),
+            new TimeOnly(2, 0), new TimeOnly(20, 0))
+           .Should().BeFalse();
 }

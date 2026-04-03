@@ -14,6 +14,7 @@ public sealed class TransferConsumerService : BackgroundService
     private readonly ITimeService _timeService;
     private readonly LinksConfig _links;
     private readonly TransferConsumerConfig _config;
+    private readonly ConsumerActivityState _activity;
     private readonly ILogger<TransferConsumerService> _logger;
 
     private readonly TimeOnly _startTime;
@@ -32,6 +33,7 @@ public sealed class TransferConsumerService : BackgroundService
         ITimeService timeService,
         LinksConfig links,
         AppConfig config,
+        ConsumerActivityState activity,
         ILogger<TransferConsumerService> logger)
     {
         _sessionProvider = sessionProvider;
@@ -39,6 +41,7 @@ public sealed class TransferConsumerService : BackgroundService
         _timeService = timeService;
         _links = links;
         _config = config.TransferConsumer;
+        _activity = activity;
         _logger = logger;
 
         _startTime = ScheduleHelper.ParseTimeOnly(_config.StartTime, "23:00");
@@ -91,12 +94,13 @@ public sealed class TransferConsumerService : BackgroundService
     {
         _logger.LogInformation("TransferConsumer: starting run");
 
+        _activity.Enter();
+        try
+        {
         await _sessionProvider.UsePageAsync(async page =>
         {
-            // Navigate to /files and read current transfer
-            await page.GotoAsync("https://www.nopremium.pl/files",
-                new() { WaitUntil = Microsoft.Playwright.WaitUntilState.Load, Timeout = 30_000 });
-
+            // Read transfer info from the current page — #signed is present on all nopremium.pl pages.
+            // AddLinksToQueueAsync will navigate to /files itself.
             var transferInfo = await _client.ReadTransferInfoAsync(page);
             if (transferInfo is null)
             {
@@ -137,6 +141,11 @@ public sealed class TransferConsumerService : BackgroundService
             _logger.LogInformation("TransferConsumer run complete: {Queued} file(s) queued", queued);
 
         }, ct);
+        }
+        finally
+        {
+            _activity.Exit();
+        }
     }
 
     private List<LinkEntry> SelectLinks(long budgetBytes)

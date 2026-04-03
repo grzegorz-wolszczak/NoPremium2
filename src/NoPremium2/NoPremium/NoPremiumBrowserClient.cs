@@ -32,10 +32,12 @@ public sealed class NoPremiumBrowserClient
         @"Pozostały transfer:\s*(?<total>[\d.,]+)\s*(?<totalUnit>GB|MB|TB|KB)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    private readonly SessionPageSaver _sessionPageSaver;
     private readonly ILogger<NoPremiumBrowserClient> _logger;
 
-    public NoPremiumBrowserClient(ILogger<NoPremiumBrowserClient> logger)
+    public NoPremiumBrowserClient(SessionPageSaver sessionPageSaver, ILogger<NoPremiumBrowserClient> logger)
     {
+        _sessionPageSaver = sessionPageSaver;
         _logger = logger;
     }
 
@@ -106,15 +108,11 @@ public sealed class NoPremiumBrowserClient
         var urlList = urls.ToList();
         if (urlList.Count == 0) return 0;
 
-        if (!page.Url.Contains("/files"))
-        {
-            _logger.LogInformation("Navigating to /files to queue {Count} link(s)", urlList.Count);
-            await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.Load, Timeout = 30_000 });
-        }
-        else
-        {
-            _logger.LogInformation("Already on /files, queuing {Count} link(s)", urlList.Count);
-        }
+        // Navigate to /files and wait for full JS render.
+        _logger.LogInformation("Navigating to /files to queue {Count} link(s)", urlList.Count);
+        await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.NetworkIdle, Timeout = 60_000 });
+
+        _logger.LogDebug("Page URL after navigation: {Url}", page.Url);
 
         // Guard: if server redirected us away from /files (e.g. session expired → login page), fail fast
         if (!page.Url.Contains("/files"))
@@ -123,9 +121,12 @@ public sealed class NoPremiumBrowserClient
                 $"Navigation to /files was redirected to '{page.Url}'. Session may have expired.");
         }
 
-        // Fill the links textarea. From old code, the form field name is 'links'.
-        var textarea = page.Locator("textarea[name='links']");
-        await textarea.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        // Diagnostic: log all textareas found on the page so we can identify the correct selector
+        await LogPageDiagnosticsAsync(page);
+
+        // Fill the links textarea (id/name = 'filesList', confirmed from live page diagnostics).
+        var textarea = page.Locator("#filesList");
+        await textarea.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15_000 });
         await textarea.FillAsync(string.Join("\n", urlList));
 
         // Click the submit button. It's near the textarea and says "Dodaj" (exact match avoids "Dodaj zaznaczone")
@@ -136,6 +137,11 @@ public sealed class NoPremiumBrowserClient
 
         await submitBtn.ClickAsync();
         _logger.LogDebug("Submitted links, waiting for processing...");
+
+        // Wait for AJAX/navigation triggered by the submit to settle, then capture page state
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 15_000 });
+        await LogPageDiagnosticsAsync(page);
+        await _sessionPageSaver.CaptureAsync(page);
 
         // Wait for the "Przetwarzane pliki" section to appear
         // It contains processed (valid) files with checkboxes
@@ -261,5 +267,63 @@ public sealed class NoPremiumBrowserClient
         _keepaliveIndex++;
         _logger.LogDebug("Keepalive navigation to {Url}", url);
         await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // Diagnostics
+    // ──────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Logs the page title, all textarea name/id attributes, and first 800 chars of page text.
+    /// Used to identify the correct form selectors when things break.
+    /// </summary>
+    private async Task LogPageDiagnosticsAsync(IPage page)
+    {
+        try
+        {
+            var title = await page.TitleAsync();
+            _logger.LogDebug("Page diagnostics — title: '{Title}', URL: {Url}", title, page.Url);
+
+            // Log all textareas
+            var allTextareas = page.Locator("textarea");
+            int taCount = await allTextareas.CountAsync();
+            _logger.LogDebug("Textareas on page: {Count}", taCount);
+            for (int i = 0; i < taCount; i++)
+            {
+                var t = allTextareas.Nth(i);
+                var name    = await t.GetAttributeAsync("name") ?? "(none)";
+                var id      = await t.GetAttributeAsync("id")   ?? "(none)";
+                var visible = await t.IsVisibleAsync();
+                var valLen  = (await t.InputValueAsync()).Length;
+                _logger.LogDebug("  textarea[{I}]: name='{Name}', id='{Id}', visible={Visible}, valueLength={Len}", i, name, id, visible, valLen);
+            }
+
+            // Log all buttons and submit inputs
+            var allButtons = page.Locator("button, input[type='submit'], input[type='button']");
+            int btnCount = await allButtons.CountAsync();
+            _logger.LogDebug("Buttons/submits on page: {Count}", btnCount);
+            for (int i = 0; i < btnCount; i++)
+            {
+                var b       = allButtons.Nth(i);
+                var tag     = await b.EvaluateAsync<string>("el => el.tagName");
+                var bId     = await b.GetAttributeAsync("id")    ?? "(none)";
+                var bName   = await b.GetAttributeAsync("name")  ?? "(none)";
+                var bType   = await b.GetAttributeAsync("type")  ?? "(none)";
+                var bValue  = await b.GetAttributeAsync("value") ?? "(none)";
+                var bText   = (await b.InnerTextAsync()).Trim();
+                var visible = await b.IsVisibleAsync();
+                _logger.LogDebug("  btn[{I}]: <{Tag}> id='{Id}', name='{Name}', type='{Type}', value='{Value}', text='{Text}', visible={Visible}",
+                    i, tag, bId, bName, bType, bValue, bText, visible);
+            }
+
+            // Body snippet (2000 chars)
+            var bodyText = await page.Locator("body").InnerTextAsync(new() { Timeout = 5_000 });
+            var snippet = bodyText.Length > 2000 ? bodyText[..2000] : bodyText;
+            _logger.LogDebug("Page body snippet:{NewLine}{Snippet}", Environment.NewLine, snippet);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Page diagnostics failed");
+        }
     }
 }

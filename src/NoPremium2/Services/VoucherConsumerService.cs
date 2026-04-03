@@ -15,6 +15,7 @@ public sealed class VoucherConsumerService : BackgroundService
     private readonly NoPremiumBrowserClient _client;
     private readonly ITimeService _timeService;
     private readonly VoucherConsumerConfig _config;
+    private readonly ConsumerActivityState _activity;
     private readonly ILogger<VoucherConsumerService> _logger;
 
     private readonly TimeOnly _startTime;
@@ -28,6 +29,7 @@ public sealed class VoucherConsumerService : BackgroundService
         NoPremiumBrowserClient client,
         ITimeService timeService,
         AppConfig config,
+        ConsumerActivityState activity,
         ILogger<VoucherConsumerService> logger)
     {
         _sessionProvider = sessionProvider;
@@ -35,6 +37,7 @@ public sealed class VoucherConsumerService : BackgroundService
         _client = client;
         _timeService = timeService;
         _config = config.VoucherConsumer;
+        _activity = activity;
         _logger = logger;
 
         _startTime = ScheduleHelper.ParseTimeOnly(_config.StartTime, "23:00");
@@ -100,7 +103,11 @@ public sealed class VoucherConsumerService : BackgroundService
         _logger.LogInformation("Found {Count} voucher(s) to consume", vouchers.Count);
         if (vouchers.Count == 0) return;
 
-        // Step 2: For each voucher, consume via browser then mark email as seen
+        // Step 2: For each voucher, consume via browser then mark email as seen.
+        // Signal to KeepaliveService that the browser is in use for the duration of this block.
+        _activity.Enter();
+        try
+        {
         var seenUids = new List<MailKit.UniqueId>();
 
         foreach (var voucher in vouchers)
@@ -150,6 +157,11 @@ public sealed class VoucherConsumerService : BackgroundService
             {
                 _logger.LogError(ex, "Failed to mark {Count} email(s) as seen", seenUids.Count);
             }
+        }
+        }
+        finally
+        {
+            _activity.Exit();
         }
 
         _logger.LogInformation("VoucherConsumer run complete");
