@@ -99,6 +99,163 @@ public sealed class NoPremiumBrowserClient
     }
 
     // ──────────────────────────────────────────────────────────────────
+    // Remove completed links from download queue
+    // ──────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Navigates to /files, finds all queue rows with status "Zakończono" whose display
+    /// name starts with one of the provided <paramref name="linkNames"/>, checks their
+    /// checkboxes and clicks "Usuń zaznaczone". Returns the number of deleted entries.
+    ///
+    /// Name matching: the queue shows file names with optional suffixes like "_720p.mp4";
+    /// the link name from config is matched as a case-insensitive prefix of the queue entry
+    /// (after stripping mid-word line-break newlines that the site inserts for column width).
+    /// </summary>
+    public async Task<int> RemoveCompletedLinksAsync(IPage page, IEnumerable<string> linkNames, CancellationToken ct = default)
+    {
+        var nameSet = linkNames
+            .Select(n => n.Trim())
+            .Where(n => !string.IsNullOrEmpty(n))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (nameSet.Count == 0) return 0;
+
+        _logger.LogDebug("Navigating to /files to check for completed entries to clean up");
+        await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.NetworkIdle, Timeout = 60_000 });
+
+        // Collect completed entries via JS. Each completed row has:
+        //   td[id^="status"] div.finish  — "Zakończono"
+        //   td[id^="action"]             — file name (may contain <br> for column wrapping)
+        //   input[name="sid[]"]          — checkbox with file ID as value
+        // We strip newlines (inserted by the site mid-word to fit column width) before matching.
+        // Format: "displayText\x1Fid" pairs joined by "\x1E" (ASCII record separator).
+        var raw = await page.EvaluateAsync<string>(
+            "() => {" +
+            "  var rows = document.querySelectorAll('#downloadFilesArea tr.table_content');" +
+            "  var parts = [];" +
+            "  for (var i = 0; i < rows.length; i++) {" +
+            "    var row = rows[i];" +
+            "    if (!row.querySelector('td[id^=\"status\"] div.finish')) continue;" +
+            "    var ac = row.querySelector('td[id^=\"action\"]');" +
+            "    if (!ac) continue;" +
+            "    var cb = row.querySelector('input[name=\"sid[]\"]');" +
+            "    if (!cb) continue;" +
+            "    var txt = (ac.innerText || ac.textContent || '').replace(/\\n/g, ' ').replace(/\\s+/g, ' ').trim();" +
+            "    parts.push(txt + '\\x1F' + cb.value);" +
+            "  }" +
+            "  return parts.join('\\x1E');" +
+            "}");
+
+        if (string.IsNullOrEmpty(raw))
+        {
+            _logger.LogDebug("No completed entries found in /files queue");
+            return 0;
+        }
+
+        // Parse "text\x1Fid" pairs
+        var entries = raw.Split('\x1E', StringSplitOptions.RemoveEmptyEntries)
+            .Select(e =>
+            {
+                var sep = e.IndexOf('\x1F');
+                return sep < 0 ? ((string Text, string Id)?)null : (e[..sep], e[(sep + 1)..]);
+            })
+            .Where(e => e.HasValue)
+            .Select(e => e!.Value)
+            .ToList();
+
+        _logger.LogDebug("Found {Total} completed entry/entries in queue total", entries.Count);
+
+        // Match: queue file name contains the config link name (case-insensitive).
+        // We use Contains rather than StartsWith because the site sometimes prepends text
+        // to the file name (e.g. "Zagrajmy w Heroes 3: #1 - ..." when config says "Heroes 3: #1 - ...").
+        var toDelete = new List<(string Text, string Id)>();
+        var unmatched = new List<string>();
+        foreach (var e in entries)
+        {
+            if (nameSet.Any(n => e.Text.Contains(n, StringComparison.OrdinalIgnoreCase)))
+                toDelete.Add(e);
+            else
+                unmatched.Add(e.Text);
+        }
+
+        if (unmatched.Count > 0)
+            _logger.LogDebug("Completed entries not matching any config name ({Count}): {Names}",
+                unmatched.Count, string.Join(", ", unmatched.Select(t => $"'{t}'")));
+
+        if (toDelete.Count == 0)
+        {
+            _logger.LogDebug("None of the completed entries match the provided link names");
+            return 0;
+        }
+
+        _logger.LogInformation("Deleting {Count} completed entry/entries from /files queue", toDelete.Count);
+        foreach (var (text, _) in toDelete)
+            _logger.LogDebug("  Deleting: '{Text}'", text);
+
+        // Tick each checkbox
+        foreach (var (_, id) in toDelete)
+        {
+            var cb = page.Locator($"input[name='sid[]'][value='{id}']");
+            await cb.CheckAsync();
+        }
+
+        // Override window.confirm to auto-accept (handles sites that use native confirm dialog)
+        await page.EvaluateAsync("() => { window.confirm = function() { return true; }; }");
+
+        // Register Playwright Dialog handler as a fallback for native browser dialogs
+        async void AcceptDialog(object? _, IDialog d) { try { await d.AcceptAsync(); } catch { } }
+        page.Dialog += AcceptDialog;
+
+        try
+        {
+            var deleteBtn = page.Locator("input[value='Usuń zaznaczone']");
+            await deleteBtn.ClickAsync();
+
+            // jquery.modal creates a .blocker.current overlay when showing a custom modal.
+            // Wait briefly; if one appears, capture it and click the confirm button inside.
+            var blocker = page.Locator(".blocker.current");
+            bool modalAppeared = false;
+            try
+            {
+                await blocker.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 3_000 });
+                modalAppeared = true;
+            }
+            catch { /* no modal — delete was immediate (window.confirm bypassed or no confirmation) */ }
+
+            if (modalAppeared)
+            {
+                _logger.LogDebug("jQuery confirmation modal appeared — capturing and confirming");
+                await _sessionPageSaver.CaptureAsync(page);
+
+                // Find confirmation button by common Polish text patterns
+                var confirmBtn = page.Locator(".blocker.current")
+                    .Locator("button, input[type='button'], input[type='submit'], a")
+                    .Filter(new LocatorFilterOptions
+                    {
+                        HasTextRegex = new System.Text.RegularExpressions.Regex(
+                            "Tak|Usuń|OK|Potwierdź",
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    })
+                    .First;
+
+                await confirmBtn.ClickAsync(new() { Timeout = 10_000 });
+                _logger.LogDebug("Clicked modal confirm button");
+            }
+        }
+        finally
+        {
+            page.Dialog -= AcceptDialog;
+        }
+
+        // Wait for the deletion AJAX to complete
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 30_000 });
+        await _sessionPageSaver.CaptureAsync(page);
+
+        _logger.LogInformation("Deleted {Count} entry/entries from /files queue", toDelete.Count);
+        return toDelete.Count;
+    }
+
+    // ──────────────────────────────────────────────────────────────────
     // Add links to download queue
     // ──────────────────────────────────────────────────────────────────
 

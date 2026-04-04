@@ -109,6 +109,11 @@ public sealed class TransferConsumerService : BackgroundService
                     return;
                 }
 
+                // Before adding new links: remove any already-completed entries from the queue
+                // so the same links can be re-added (server rejects duplicates).
+                // Pass all link names — RemoveCompletedLinksAsync will only touch "Zakończono" entries.
+                await _client.RemoveCompletedLinksAsync(page, _links.Links.Select(l => l.Name), ct);
+
                 int addedThisRun = 0;
 
                 foreach (var link in candidates)

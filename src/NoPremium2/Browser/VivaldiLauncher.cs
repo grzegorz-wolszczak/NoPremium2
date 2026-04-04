@@ -44,6 +44,8 @@ public sealed class VivaldiLauncher : IVivaldiLauncher
             FileName = "setsid",
             Arguments = $"{_settings.VivaldiPath} --remote-debugging-port={port} --user-data-dir=\"{profileDir}\" --no-first-run --no-default-browser-check",
             UseShellExecute = false,
+            RedirectStandardError = true,   // suppress Chromium GCM/internal noise from stdout
+            RedirectStandardOutput = true,
         };
 
         var process = Process.Start(startInfo)

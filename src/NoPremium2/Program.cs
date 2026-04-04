@@ -151,7 +151,7 @@ internal sealed class Program
                 // AppSettings (used by existing LoginService / BrowserManager)
                 services.AddSingleton(AppSettings.From(config));
 
-                // HTTP client (for CDP check + NTP time service)
+                // HTTP client (for CDP check)
                 var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
                 services.AddSingleton(http);
 
