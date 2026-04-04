@@ -36,7 +36,7 @@ public sealed class BrowserManagerTests
 
         await CreateSut().GetOrLaunchAsync();
 
-        _launcher.DidNotReceive().Launch(Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>());
+        _launcher.DidNotReceive().Launch(Arg.Any<int>(), Arg.Any<string>());
         _portAllocator.DidNotReceive().GetFreePort();
     }
 
@@ -57,12 +57,12 @@ public sealed class BrowserManagerTests
     {
         _cdpDiscovery.FindExistingPortAsync().Returns((int?)null);
         _portAllocator.GetFreePort().Returns(41769);
-        _launcher.Launch(41769, Arg.Any<string>(), Arg.Any<string>()).Returns((Process?)null);
+        _launcher.Launch(41769, Arg.Any<string>()).Returns((Process?)null);
         _connector.ConnectAsync(41769, Arg.Any<CancellationToken>()).Returns(MakeConnectResult());
 
         await CreateSut().GetOrLaunchAsync();
 
-        _launcher.Received(1).Launch(41769, _settings.ProfileDir, _settings.LoginUrl);
+        _launcher.Received(1).Launch(41769, _settings.ProfileDir);
         await _launcher.Received(1).WaitForCdpAsync(41769, Arg.Any<CancellationToken>());
     }
 
@@ -71,7 +71,7 @@ public sealed class BrowserManagerTests
     {
         _cdpDiscovery.FindExistingPortAsync().Returns((int?)null);
         _portAllocator.GetFreePort().Returns(41769);
-        _launcher.Launch(Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>()).Returns((Process?)null);
+        _launcher.Launch(Arg.Any<int>(), Arg.Any<string>()).Returns((Process?)null);
         _connector.ConnectAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(MakeConnectResult());
 
         var session = await CreateSut().GetOrLaunchAsync();

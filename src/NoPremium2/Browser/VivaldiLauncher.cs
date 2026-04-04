@@ -5,7 +5,7 @@ namespace NoPremium2.Browser;
 
 public interface IVivaldiLauncher
 {
-    Process Launch(int port, string profileDir, string startUrl);
+    Process Launch(int port, string profileDir);
     Task WaitForCdpAsync(int port, CancellationToken ct = default);
 }
 
@@ -28,7 +28,7 @@ public sealed class VivaldiLauncher : IVivaldiLauncher
         _logger = logger;
     }
 
-    public Process Launch(int port, string profileDir, string startUrl)
+    public Process Launch(int port, string profileDir)
     {
         Directory.CreateDirectory(profileDir);
         _logger.LogInformation("Launching Vivaldi, CDP port {Port}, profile: {Profile}", port, profileDir);
@@ -36,10 +36,13 @@ public sealed class VivaldiLauncher : IVivaldiLauncher
         // Launch via 'setsid' so the browser runs in a new session.
         // setsid(1) calls the setsid() syscall BEFORE exec'ing the browser, so the browser
         // is never in the terminal's foreground process group and won't receive SIGINT on CTRL+C.
+        // No startUrl argument — passing a URL on the command line opens a second tab alongside
+        // the default new-tab page, resulting in two tabs. LoginService navigates to the login
+        // page explicitly, so no URL is needed at launch time.
         var startInfo = new ProcessStartInfo
         {
             FileName = "setsid",
-            Arguments = $"{_settings.VivaldiPath} --remote-debugging-port={port} --user-data-dir=\"{profileDir}\" --no-first-run --no-default-browser-check {startUrl}",
+            Arguments = $"{_settings.VivaldiPath} --remote-debugging-port={port} --user-data-dir=\"{profileDir}\" --no-first-run --no-default-browser-check",
             UseShellExecute = false,
         };
 

@@ -52,7 +52,7 @@ public sealed class BrowserManager : IBrowserManager
             cdpPort = _portAllocator.GetFreePort();
             isOwned = true;
             _logger.LogInformation("OS-allocated free port: {Port}", cdpPort);
-            ownedProcess = _launcher.Launch(cdpPort, _settings.ProfileDir, _settings.LoginUrl);
+            ownedProcess = _launcher.Launch(cdpPort, _settings.ProfileDir);
             await _launcher.WaitForCdpAsync(cdpPort, ct);
         }
 

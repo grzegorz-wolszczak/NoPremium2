@@ -128,14 +128,44 @@ public sealed class NoPremiumBrowserClient
 
         var submitBtn = page.Locator("input[onclick*='submitFiles']");
         await submitBtn.ClickAsync();
+        _logger.LogDebug("Submit button clicked");
+
+        // Capture page state immediately after click so we can inspect what submitFiles() did
+        // synchronously (before async AJAX changes). Useful for diagnosing why #insertPanel
+        // might not hide when expected.
+        await _sessionPageSaver.CaptureAsync(page);
+
+        var domAfterClick = await page.EvaluateAsync<string>(
+            "() => { var ip=document.getElementById('insertPanel'); var pp=document.getElementById('progressPanel'); var ta=document.getElementById('filesList'); " +
+            "return JSON.stringify({ insertPanelDisplay: ip ? ip.style.display : 'NOT_FOUND', progressPanelDisplay: pp ? pp.style.display : 'NOT_FOUND', textareaValue: (ta ? ta.value : '').substring(0, 80) }); }");
+        _logger.LogDebug("DOM state right after click: {State}", domAfterClick);
 
         // Phase 3: Wait for submitFiles() AJAX processing to complete.
-        // #progressPanel ("Trwa przetwarzanie plików X/Y") may appear and disappear very fast
-        // (< 400 ms for a single link), so polling for it is unreliable.
-        // NetworkIdle fires once all AJAX responses from the server have arrived and the DOM is updated.
-        _logger.LogDebug("Waiting for server to finish processing link(s)...");
-        await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 120_000 });
-        _logger.LogDebug("Server processing complete");
+        //
+        // Two-step DOM wait — avoids the NetworkIdle race condition:
+        //
+        //   Step 3a: Wait for #insertPanel to be hidden.
+        //     submitFiles() hides #insertPanel and shows #progressPanel synchronously when it starts.
+        //     This confirms the JS ran and the AJAX request was dispatched.
+        //
+        //   Step 3b: Wait for #progressPanel to be hidden.
+        //     #progressPanel ("Trwa przetwarzanie plików...") is visible while the server processes.
+        //     It is hidden again only when the AJAX response arrives and the DOM is updated — this
+        //     is the reliable signal that processing is complete (results/"Dodaj zaznaczone" visible).
+        //
+        // NOTE: We cannot wait for #progressPanel visible→hidden in a single step, because the
+        // server can respond in < 400 ms and Playwright's selector polling would miss the brief
+        // visible state. Instead we wait for #insertPanel hidden first, at which point
+        // #progressPanel is guaranteed to be visible (confirmed by DOM snapshots), then we wait
+        // for #progressPanel hidden.
+        _logger.LogDebug("Waiting for submitFiles() to start (#insertPanel hidden)...");
+        var insertPanel = page.Locator("#insertPanel");
+        await insertPanel.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 30_000 });
+        _logger.LogDebug("submitFiles() started — now waiting for #progressPanel to hide (AJAX complete)...");
+
+        var progressPanel = page.Locator("#progressPanel");
+        await progressPanel.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 120_000 });
+        _logger.LogDebug("Server processing complete (#progressPanel hidden)");
 
         await _sessionPageSaver.CaptureAsync(page);
 

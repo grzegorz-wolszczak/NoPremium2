@@ -31,7 +31,7 @@ public sealed class ChromeLauncher : IVivaldiLauncher
     public static string? FindExecutable() =>
         CandidatePaths.FirstOrDefault(File.Exists);
 
-    public Process Launch(int port, string profileDir, string startUrl)
+    public Process Launch(int port, string profileDir)
     {
         var dir = string.IsNullOrWhiteSpace(profileDir) ? DefaultProfileDir : profileDir;
         Directory.CreateDirectory(dir);
@@ -40,11 +40,13 @@ public sealed class ChromeLauncher : IVivaldiLauncher
         // Launch via 'setsid' so the browser runs in a new session.
         // setsid(1) calls the setsid() syscall BEFORE exec'ing the browser, so the browser
         // is never in the terminal's foreground process group and won't receive SIGINT on CTRL+C.
+        // No startUrl argument — passing a URL on the command line opens a second tab alongside
+        // the default new-tab page. LoginService navigates explicitly.
         var startInfo = new ProcessStartInfo
         {
             FileName = "setsid",
             Arguments = $"{_executablePath} --remote-debugging-port={port} --user-data-dir=\"{dir}\" " +
-                        $"--no-first-run --no-default-browser-check {startUrl}",
+                        $"--no-first-run --no-default-browser-check",
             UseShellExecute = false,
         };
 
