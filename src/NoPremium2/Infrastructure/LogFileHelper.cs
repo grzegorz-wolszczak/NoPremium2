@@ -9,8 +9,16 @@ public static class LogFileHelper
     public static string ResolveLogFilePath(string logDir, DateTime now)
     {
         string today = now.ToString("yyyyMMdd");
-        int runNumber = Directory.GetFiles(logDir, $"logs_{today}.??.log").Length + 1;
-        return Path.Combine(logDir, $"logs_{today}.{runNumber:D2}.log");
+        var existing = Directory.GetFiles(logDir, $"logs_{today}.??.log");
+        int maxNumber = 0;
+        foreach (var f in existing)
+        {
+            var baseName = Path.GetFileNameWithoutExtension(f); // e.g. "logs_20260401.03"
+            var dotIdx = baseName.LastIndexOf('.');
+            if (dotIdx >= 0 && int.TryParse(baseName[(dotIdx + 1)..], out int n))
+                maxNumber = Math.Max(maxNumber, n);
+        }
+        return Path.Combine(logDir, $"logs_{today}.{maxNumber + 1:D2}.log");
     }
 
     /// <summary>

@@ -89,7 +89,7 @@ public static class ConfigLoader
         return LoadLinksConfig(resolvedPath);
     }
 
-    internal static LinksConfig LoadLinksConfig(string filePath)
+    public static LinksConfig LoadLinksConfig(string filePath)
     {
         if (!File.Exists(filePath))
             ExitWithError($"Links file not found: {filePath}");
@@ -133,7 +133,7 @@ public static class ConfigLoader
         return (parts[0], port);
     }
 
-    internal static AppConfig ApplyDefaults(AppConfig config)
+    public static AppConfig ApplyDefaults(AppConfig config)
     {
         var tc = config.TransferConsumer;
         var vc = config.VoucherConsumer;
@@ -157,7 +157,7 @@ public static class ConfigLoader
         };
     }
 
-    private static bool NullOrEmpty(string? s) => string.IsNullOrWhiteSpace(s);
+    public static bool NullOrEmpty(string? s) => string.IsNullOrWhiteSpace(s);
 
     private static void ExitWithError(string message)
     {

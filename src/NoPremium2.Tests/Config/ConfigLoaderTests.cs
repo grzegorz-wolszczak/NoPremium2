@@ -188,4 +188,20 @@ public sealed class ConfigLoaderTests
         result.EmailPassword.Should().Be("ep");
         result.LinksFilePath.Should().Be("links.json");
     }
+
+    // ── NullOrEmpty ───────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void NullOrEmpty_WhenNullOrWhitespace_ReturnsTrue(string? value)
+        => ConfigLoader.NullOrEmpty(value).Should().BeTrue();
+
+    [Theory]
+    [InlineData("a")]
+    [InlineData("hello")]
+    [InlineData(" x ")]
+    public void NullOrEmpty_WhenNonEmpty_ReturnsFalse(string value)
+        => ConfigLoader.NullOrEmpty(value).Should().BeFalse();
 }

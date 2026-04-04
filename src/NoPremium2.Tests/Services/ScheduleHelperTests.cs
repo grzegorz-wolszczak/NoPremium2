@@ -152,6 +152,80 @@ public sealed class ScheduleHelperTests
         => ScheduleHelper.ParseTimeOnly("", "08:00")
             .Should().Be(new TimeOnly(8, 0));
 
+    // ── IsInWindow ────────────────────────────────────────────────────
+
+    [Fact]
+    public void IsInWindow_NormalRange_CurrentInside_ReturnsTrue()
+        => ScheduleHelper.IsInWindow(new TimeOnly(23, 30), new TimeOnly(23, 0), new TimeOnly(23, 55))
+            .Should().BeTrue();
+
+    [Fact]
+    public void IsInWindow_NormalRange_CurrentOutside_ReturnsFalse()
+        => ScheduleHelper.IsInWindow(new TimeOnly(12, 0), new TimeOnly(23, 0), new TimeOnly(23, 55))
+            .Should().BeFalse();
+
+    [Fact]
+    public void IsInWindow_NormalRange_AtStartBoundary_ReturnsTrue()
+        => ScheduleHelper.IsInWindow(new TimeOnly(23, 0), new TimeOnly(23, 0), new TimeOnly(23, 55))
+            .Should().BeTrue();
+
+    [Fact]
+    public void IsInWindow_NormalRange_AtEndBoundary_ReturnsTrue()
+        => ScheduleHelper.IsInWindow(new TimeOnly(23, 55), new TimeOnly(23, 0), new TimeOnly(23, 55))
+            .Should().BeTrue();
+
+    [Fact]
+    public void IsInWindow_MidnightCrossing_AfterMidnight_ReturnsTrue()
+        // Window 23:00–00:30, current time 00:15 (past midnight, inside window)
+        => ScheduleHelper.IsInWindow(new TimeOnly(0, 15), new TimeOnly(23, 0), new TimeOnly(0, 30))
+            .Should().BeTrue();
+
+    [Fact]
+    public void IsInWindow_MidnightCrossing_BeforeMidnight_ReturnsTrue()
+        // Window 23:00–00:30, current time 23:45
+        => ScheduleHelper.IsInWindow(new TimeOnly(23, 45), new TimeOnly(23, 0), new TimeOnly(0, 30))
+            .Should().BeTrue();
+
+    [Fact]
+    public void IsInWindow_MidnightCrossing_Midday_ReturnsFalse()
+        // Window 23:00–00:30, current time 12:00 (clearly outside)
+        => ScheduleHelper.IsInWindow(new TimeOnly(12, 0), new TimeOnly(23, 0), new TimeOnly(0, 30))
+            .Should().BeFalse();
+
+    // ── TimeUntilTomorrow ─────────────────────────────────────────────
+
+    [Fact]
+    public void TimeUntilTomorrow_TargetAheadToday_ReturnsWaitUntilTargetToday()
+    {
+        var now    = new DateTime(2024, 1, 15, 8, 0, 0);
+        var target = new TimeOnly(23, 0);
+        var expected = new DateTime(2024, 1, 15, 23, 0, 0) - now;
+
+        ScheduleHelper.TimeUntilTomorrow(now, target).Should().Be(expected);
+    }
+
+    [Fact]
+    public void TimeUntilTomorrow_TargetAlreadyPassedToday_ReturnsWaitUntilTomorrow()
+    {
+        var now    = new DateTime(2024, 1, 15, 23, 58, 0);
+        var target = new TimeOnly(23, 0);
+        var expected = new DateTime(2024, 1, 16, 23, 0, 0) - now;
+
+        ScheduleHelper.TimeUntilTomorrow(now, target).Should().Be(expected);
+    }
+
+    [Fact]
+    public void TimeUntilTomorrow_TargetExactlyNow_ReturnsZero()
+    {
+        var now    = new DateTime(2024, 1, 15, 23, 0, 0);
+        var target = new TimeOnly(23, 0);
+
+        // Target equals now — target is NOT ahead, so tomorrow
+        var expected = new DateTime(2024, 1, 16, 23, 0, 0) - now;
+
+        ScheduleHelper.TimeUntilTomorrow(now, target).Should().Be(expected);
+    }
+
     // ── SchedulesOverlap ──────────────────────────────────────────────
 
     [Fact]

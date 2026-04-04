@@ -124,14 +124,8 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
     {
         var session = Interlocked.Exchange(ref _session, null);
         if (session is null) return;
-        try
-        {
-            session.KillOwnedBrowser();
-            session.Dispose();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Error disposing browser session");
-        }
+        // Browser is intentionally left running — user may want to keep it open after shutdown.
+        try { session.Dispose(); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Error disposing browser session"); }
     }
 }

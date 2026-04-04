@@ -97,79 +97,78 @@ public sealed class TransferConsumerService : BackgroundService
         _activity.Enter();
         try
         {
-        await _sessionProvider.UsePageAsync(async page =>
-        {
-            // Read transfer info from the current page — #signed is present on all nopremium.pl pages.
-            // AddLinksToQueueAsync will navigate to /files itself.
-            var transferInfo = await _client.ReadTransferInfoAsync(page);
-            if (transferInfo is null)
+            await _sessionProvider.UsePageAsync(async page =>
             {
-                _logger.LogWarning("Could not read transfer info, skipping run");
-                return;
-            }
+                var candidates = _links.Links
+                    .Where(l => !_queuedToday.Contains(l.Url))
+                    .ToList();
 
-            _logger.LogInformation("Current transfer: {Info}", transferInfo);
+                if (candidates.Count == 0)
+                {
+                    _logger.LogInformation("No new links to process (all already queued today)");
+                    return;
+                }
 
-            if (transferInfo.PremiumBytes <= _config.ReserveTransferBytes)
-            {
-                _logger.LogInformation(
-                    "Premium transfer ({Premium}) is at or below reserve ({Reserve}), nothing to consume",
-                    DataSizeConverter.FormatBytes(transferInfo.PremiumBytes),
-                    DataSizeConverter.FormatBytes(_config.ReserveTransferBytes));
-                return;
-            }
+                int addedThisRun = 0;
 
-            long budget = transferInfo.PremiumBytes - _config.ReserveTransferBytes;
-            _logger.LogInformation("Budget to consume: {Budget}", DataSizeConverter.FormatBytes(budget));
+                foreach (var link in candidates)
+                {
+                    ct.ThrowIfCancellationRequested();
 
-            var toQueue = SelectLinks(budget);
-            if (toQueue.Count == 0)
-            {
-                _logger.LogInformation("No new links to queue (all already queued today or list exhausted)");
-                return;
-            }
+                    // Fresh transfer read before every link — page header is always current
+                    var transferInfo = await _client.ReadTransferInfoAsync(page);
+                    if (transferInfo is null)
+                    {
+                        _logger.LogWarning("Could not read transfer info, stopping run");
+                        break;
+                    }
 
-            _logger.LogInformation("Selected {Count} link(s) to queue:", toQueue.Count);
-            foreach (var link in toQueue)
-                _logger.LogInformation("  - {Name} ({Size})", link.Name, link.Size);
+                    // Stop if premium has dropped to or below the safe reserve
+                    if (transferInfo.PremiumBytes <= _config.ReserveTransferBytes)
+                    {
+                        _logger.LogInformation(
+                            "Premium transfer ({Premium}) reached reserve ({Reserve}), stopping for today",
+                            DataSizeConverter.FormatBytes(transferInfo.PremiumBytes),
+                            DataSizeConverter.FormatBytes(_config.ReserveTransferBytes));
+                        break;
+                    }
 
-            var queued = await _client.AddLinksToQueueAsync(page, toQueue.Select(l => l.Url), ct);
+                    long remaining = transferInfo.PremiumBytes - _config.ReserveTransferBytes;
 
-            foreach (var link in toQueue)
-                _queuedToday.Add(link.Url);
+                    long linkSize;
+                    try { linkSize = DataSizeConverter.ParseToBytes(link.Size); }
+                    catch { linkSize = 0; }
 
-            _logger.LogInformation("TransferConsumer run complete: {Queued} file(s) queued", queued);
+                    // Skip this link if consuming it would breach the reserve
+                    if (linkSize > remaining)
+                    {
+                        _logger.LogDebug(
+                            "Skipping '{Name}' ({Size}) — exceeds remaining budget {Budget}",
+                            link.Name, link.Size, DataSizeConverter.FormatBytes(remaining));
+                        continue;
+                    }
 
-        }, ct);
+                    _logger.LogInformation(
+                        "Queuing '{Name}' ({Size}) — premium remaining after reserve: {Budget}",
+                        link.Name, link.Size, DataSizeConverter.FormatBytes(remaining));
+
+                    var queued = await _client.AddLinksToQueueAsync(page, new[] { link.Url }, ct);
+
+                    _queuedToday.Add(link.Url);
+                    addedThisRun += queued;
+
+                    if (queued == 0)
+                        _logger.LogWarning("'{Name}' was not recognised by nopremium.pl", link.Name);
+                }
+
+                _logger.LogInformation("TransferConsumer run complete: {Count} file(s) queued this run", addedThisRun);
+
+            }, ct);
         }
         finally
         {
             _activity.Exit();
         }
-    }
-
-    private List<LinkEntry> SelectLinks(long budgetBytes)
-    {
-        var selected = new List<LinkEntry>();
-        long remaining = budgetBytes;
-
-        foreach (var link in _links.Links)
-        {
-            if (_queuedToday.Contains(link.Url)) continue;
-
-            long sizeBytes;
-            try { sizeBytes = DataSizeConverter.ParseToBytes(link.Size); }
-            catch { sizeBytes = 0; }
-
-            if (sizeBytes > remaining) continue;
-
-            selected.Add(link);
-            remaining -= sizeBytes;
-
-            if (remaining <= 0) break;
-        }
-
-        return selected;
     }
 
     private void ResetDailyQueueIfNeeded(DateTime now)

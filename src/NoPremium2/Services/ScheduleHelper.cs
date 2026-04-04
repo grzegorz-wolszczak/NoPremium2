@@ -39,7 +39,7 @@ internal static class ScheduleHelper
         return interval - sinceLastRun;
     }
 
-    private static bool IsInWindow(TimeOnly current, TimeOnly start, TimeOnly end)
+    public static bool IsInWindow(TimeOnly current, TimeOnly start, TimeOnly end)
     {
         // Handles both normal (23:00–23:55) and midnight-crossing (23:00–00:30) windows
         if (start <= end)
@@ -48,7 +48,7 @@ internal static class ScheduleHelper
             return current >= start || current <= end;
     }
 
-    private static TimeSpan TimeUntilTomorrow(DateTime now, TimeOnly targetTime)
+    public static TimeSpan TimeUntilTomorrow(DateTime now, TimeOnly targetTime)
     {
         var todayTarget = now.Date.Add(targetTime.ToTimeSpan());
 

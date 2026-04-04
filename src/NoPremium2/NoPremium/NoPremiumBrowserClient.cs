@@ -85,13 +85,17 @@ public sealed class NoPremiumBrowserClient
         return info;
     }
 
-    private static long ParseSize(string value, string unit)
+    public static long ParseSize(string value, string unit)
     {
         var normalized = value.Replace(',', '.');
         if (!double.TryParse(normalized, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out double d))
             return 0;
-        return DataSizeConverter.ParseToBytes($"{d}{unit}");
+        // Use InvariantCulture when formatting d to avoid locale-dependent decimal separators
+        // (e.g. Polish locale would format 22.34 as "22,34", which DataSizeConverter would
+        //  parse as 2234 treating the comma as a thousands separator).
+        return DataSizeConverter.ParseToBytes(
+            string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{d}{unit}"));
     }
 
     // ──────────────────────────────────────────────────────────────────
@@ -100,94 +104,66 @@ public sealed class NoPremiumBrowserClient
 
     /// <summary>
     /// Navigates to /files, enters the given URLs in the textarea, submits,
-    /// selects all valid (recognised) files, and clicks "Dodaj zaznaczone".
-    /// Returns the number of files successfully queued, or -1 on error.
+    /// waits for server-side processing, selects all valid (recognised) files,
+    /// and clicks "Dodaj zaznaczone".
+    /// Returns the number of URLs submitted if at least one was recognised, 0 otherwise.
     /// </summary>
     public async Task<int> AddLinksToQueueAsync(IPage page, IEnumerable<string> urls, CancellationToken ct = default)
     {
         var urlList = urls.ToList();
         if (urlList.Count == 0) return 0;
 
-        // Navigate to /files and wait for full JS render.
         _logger.LogInformation("Navigating to /files to queue {Count} link(s)", urlList.Count);
         await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.NetworkIdle, Timeout = 60_000 });
 
-        _logger.LogDebug("Page URL after navigation: {Url}", page.Url);
-
-        // Guard: if server redirected us away from /files (e.g. session expired → login page), fail fast
         if (!page.Url.Contains("/files"))
-        {
             throw new InvalidOperationException(
                 $"Navigation to /files was redirected to '{page.Url}'. Session may have expired.");
-        }
 
-        // Diagnostic: log all textareas found on the page so we can identify the correct selector
-        await LogPageDiagnosticsAsync(page);
-
-        // Fill the links textarea (id/name = 'filesList', confirmed from live page diagnostics).
+        // Phase 1→2: Fill textarea and submit.
+        // Confirmed id: 'filesList'. Submit button calls submitFiles() via AJAX — NOT a form POST.
         var textarea = page.Locator("#filesList");
         await textarea.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15_000 });
         await textarea.FillAsync(string.Join("\n", urlList));
 
-        // Click the submit button. It's near the textarea and says "Dodaj" (exact match avoids "Dodaj zaznaczone")
-        // Try id first, then text fallback
-        var submitBtn = page.Locator("#addlinks").First;
-        if (!await submitBtn.IsVisibleAsync())
-            submitBtn = page.GetByRole(AriaRole.Button, new() { Name = "Dodaj", Exact = true }).First;
-
+        var submitBtn = page.Locator("input[onclick*='submitFiles']");
         await submitBtn.ClickAsync();
-        _logger.LogDebug("Submitted links, waiting for processing...");
 
-        // Wait for AJAX/navigation triggered by the submit to settle, then capture page state
-        await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 15_000 });
-        await LogPageDiagnosticsAsync(page);
+        // Phase 3: Wait for submitFiles() AJAX processing to complete.
+        // #progressPanel ("Trwa przetwarzanie plików X/Y") may appear and disappear very fast
+        // (< 400 ms for a single link), so polling for it is unreliable.
+        // NetworkIdle fires once all AJAX responses from the server have arrived and the DOM is updated.
+        _logger.LogDebug("Waiting for server to finish processing link(s)...");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 120_000 });
+        _logger.LogDebug("Server processing complete");
+
         await _sessionPageSaver.CaptureAsync(page);
 
-        // Wait for the "Przetwarzane pliki" section to appear
-        // It contains processed (valid) files with checkboxes
-        var processedSection = page.Locator("text=Przetwarzane pliki").First;
-        try
-        {
-            await processedSection.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30_000 });
-        }
-        catch (TimeoutException)
-        {
-            _logger.LogWarning("No 'Przetwarzane pliki' section appeared — all links may be unrecognised");
-            return 0;
-        }
-
-        // Check all checkboxes in the processed files table
-        var checkboxes = page.Locator("input[type='checkbox']");
-        int checkboxCount = await checkboxes.CountAsync();
-        if (checkboxCount == 0)
-        {
-            _logger.LogWarning("No checkboxes found in processed files section");
-            return 0;
-        }
-
-        for (int i = 0; i < checkboxCount; i++)
-        {
-            ct.ThrowIfCancellationRequested();
-            var cb = checkboxes.Nth(i);
-            if (!await cb.IsCheckedAsync())
-                await cb.CheckAsync();
-        }
-
-        _logger.LogInformation("Selected {Count} checkbox(es), clicking 'Dodaj zaznaczone'", checkboxCount);
-
-        // Click "Dodaj zaznaczone"
-        var addSelectedBtn = page.GetByRole(AriaRole.Button, new() { Name = "Dodaj zaznaczone" });
+        // Phase 4: Click "Dodaj zaznaczone" if any links were recognised.
+        // The button only appears when at least one link was accepted by the server.
+        var addSelectedBtn = page.Locator("input[value='Dodaj zaznaczone']");
         if (!await addSelectedBtn.IsVisibleAsync())
-            addSelectedBtn = page.Locator("button:has-text('Dodaj zaznaczone')");
+        {
+            _logger.LogWarning("No valid files recognised by nopremium.pl for the submitted link(s)");
+            return 0;
+        }
 
         await addSelectedBtn.ClickAsync();
+        _logger.LogDebug("Clicked 'Dodaj zaznaczone'");
 
-        // Wait for the intermediate loading screen to pass
-        // (it shows a spinner "Trwa dodawanie plików do kolejek, proszę czekać...")
-        await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded, new() { Timeout = 60_000 });
-        _logger.LogInformation("Links queued successfully");
+        // Phase 5: #insertLoading ("Trwa umieszczanie plików na liście pobierania") may appear briefly.
+        var insertLoading = page.Locator("#insertLoading");
+        if (await insertLoading.IsVisibleAsync())
+        {
+            _logger.LogDebug("Waiting for insert-loading overlay to finish...");
+            await insertLoading.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 60_000 });
+        }
 
-        return checkboxCount;
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 30_000 });
+        await _sessionPageSaver.CaptureAsync(page);
+
+        _logger.LogInformation("Successfully queued {Count} link(s)", urlList.Count);
+        return urlList.Count;
     }
 
     // ──────────────────────────────────────────────────────────────────

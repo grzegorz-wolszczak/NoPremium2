@@ -33,10 +33,13 @@ public sealed class VivaldiLauncher : IVivaldiLauncher
         Directory.CreateDirectory(profileDir);
         _logger.LogInformation("Launching Vivaldi, CDP port {Port}, profile: {Profile}", port, profileDir);
 
+        // Launch via 'setsid' so the browser runs in a new session.
+        // setsid(1) calls the setsid() syscall BEFORE exec'ing the browser, so the browser
+        // is never in the terminal's foreground process group and won't receive SIGINT on CTRL+C.
         var startInfo = new ProcessStartInfo
         {
-            FileName = _settings.VivaldiPath,
-            Arguments = $"--remote-debugging-port={port} --user-data-dir=\"{profileDir}\" --no-first-run --no-default-browser-check {startUrl}",
+            FileName = "setsid",
+            Arguments = $"{_settings.VivaldiPath} --remote-debugging-port={port} --user-data-dir=\"{profileDir}\" --no-first-run --no-default-browser-check {startUrl}",
             UseShellExecute = false,
         };
 

@@ -11,6 +11,14 @@ public sealed record AppConfig
     public string EmailImapServer { get; init; } = "";
     public string LinksFilePath { get; init; } = "";
 
+    // --- Optional: log directory ---
+    /// <summary>
+    /// Directory for log files. Empty/null = default (Logs/ next to binary).
+    /// Relative path = relative to binary directory.
+    /// Absolute path = used as-is. Directory is created on startup.
+    /// </summary>
+    public string LogFileDir { get; init; } = "";
+
     // --- Optional: transfer-consumer schedule ---
     public TransferConsumerConfig TransferConsumer { get; init; } = new();
 

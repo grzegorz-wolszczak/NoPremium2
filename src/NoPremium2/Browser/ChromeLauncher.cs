@@ -37,10 +37,13 @@ public sealed class ChromeLauncher : IVivaldiLauncher
         Directory.CreateDirectory(dir);
         _logger.LogInformation("Launching Chrome, CDP port {Port}, profile: {Profile}", port, dir);
 
+        // Launch via 'setsid' so the browser runs in a new session.
+        // setsid(1) calls the setsid() syscall BEFORE exec'ing the browser, so the browser
+        // is never in the terminal's foreground process group and won't receive SIGINT on CTRL+C.
         var startInfo = new ProcessStartInfo
         {
-            FileName = _executablePath,
-            Arguments = $"--remote-debugging-port={port} --user-data-dir=\"{dir}\" " +
+            FileName = "setsid",
+            Arguments = $"{_executablePath} --remote-debugging-port={port} --user-data-dir=\"{dir}\" " +
                         $"--no-first-run --no-default-browser-check {startUrl}",
             UseShellExecute = false,
         };

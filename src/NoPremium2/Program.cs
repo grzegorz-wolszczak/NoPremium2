@@ -77,10 +77,32 @@ internal sealed class Program
         bootstrapLogger.Information("Browser: {Browser}", useChrome ? $"Chrome ({chromePath})" : $"Vivaldi ({vivaldiPath})");
 
         // ─────────────────────────────────────────────────────────────────────
-        // 6.  Configure Serilog with per-run log file
+        // 6.  Resolve log directory (Task 3: configurable LogFileDir)
         // ─────────────────────────────────────────────────────────────────────
-        string logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
-        Directory.CreateDirectory(logDir);
+        string logDir;
+        if (string.IsNullOrWhiteSpace(config.LogFileDir))
+        {
+            logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
+        }
+        else if (Path.IsPathRooted(config.LogFileDir))
+        {
+            logDir = config.LogFileDir;
+        }
+        else
+        {
+            logDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, config.LogFileDir));
+        }
+
+        try
+        {
+            Directory.CreateDirectory(logDir);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[STARTUP ERROR] Cannot create log directory '{logDir}': {ex.Message}");
+            instanceGuard.Dispose();
+            Environment.Exit(1);
+        }
 
         var now = DateTime.Now;
         string logFile = LogFileHelper.ResolveLogFilePath(logDir, now);
@@ -97,6 +119,7 @@ internal sealed class Program
         // ─────────────────────────────────────────────────────────────────────
         // 7.  Log effective configuration (passwords masked)
         // ─────────────────────────────────────────────────────────────────────
+        Log.Information("Log directory:            {LogDir}", logDir);
         Log.Information("=== NoPremium2 Configuration ===");
         Log.Information("Config file:              {Path}", configFilePath);
         Log.Information("Links file:               {Path}", config.LinksFilePath);

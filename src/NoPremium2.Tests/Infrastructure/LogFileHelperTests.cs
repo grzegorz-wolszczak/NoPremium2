@@ -76,6 +76,28 @@ public sealed class LogFileHelperTests : IDisposable
         Path.GetFileName(result).Should().StartWith("logs_20251231.");
     }
 
+    [Fact]
+    public void ResolveLogFilePath_GapsInSequence_ReturnsMaxPlusOne()
+    {
+        // .01 and .02 were deleted; only .03 remains — next run should be .04, not .02
+        Touch("logs_20260401.03.log");
+
+        var result = LogFileHelper.ResolveLogFilePath(_dir, new DateTime(2026, 4, 1));
+
+        result.Should().Be(Path.Combine(_dir, "logs_20260401.04.log"));
+    }
+
+    [Fact]
+    public void ResolveLogFilePath_NonContiguousMultipleFiles_ReturnsMaxPlusOne()
+    {
+        Touch("logs_20260401.01.log");
+        Touch("logs_20260401.05.log"); // gap — .02, .03, .04 deleted
+
+        var result = LogFileHelper.ResolveLogFilePath(_dir, new DateTime(2026, 4, 1));
+
+        result.Should().Be(Path.Combine(_dir, "logs_20260401.06.log"));
+    }
+
     // ── DeleteOldLogs ─────────────────────────────────────────────────
 
     [Fact]

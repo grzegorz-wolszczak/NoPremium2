@@ -53,7 +53,7 @@ public sealed class SessionPageSaver
         _logger.LogDebug("Saved page snapshot: {File}", filename);
     }
 
-    private static string MakeSlug(string rawUrl)
+    public static string MakeSlug(string rawUrl)
     {
         try
         {

@@ -34,7 +34,7 @@ public sealed class CdpPortDiscoveryTests
     public async Task FindExistingPortAsync_WhenVivaldiRunningWithCdp_ReturnsPort()
     {
         var reader = Substitute.For<IProcessCmdlineReader>();
-        reader.GetByName("vivaldi").Returns(new[] { (Pid: 1234, Cmdline: (string?)"vivaldi\0--remote-debugging-port=9222\0") });
+        reader.GetAll().Returns(new[] { (Pid: 1234, Cmdline: (string?)"vivaldi-bin\0--remote-debugging-port=9222\0") });
 
         var checker = Substitute.For<ICdpChecker>();
         checker.IsRespondingAsync(9222).Returns(true);
@@ -50,7 +50,7 @@ public sealed class CdpPortDiscoveryTests
     public async Task FindExistingPortAsync_WhenCdpNotResponding_ReturnsNull()
     {
         var reader = Substitute.For<IProcessCmdlineReader>();
-        reader.GetByName("vivaldi").Returns(new[] { (Pid: 1234, Cmdline: (string?)"vivaldi\0--remote-debugging-port=9222\0") });
+        reader.GetAll().Returns(new[] { (Pid: 1234, Cmdline: (string?)"vivaldi-bin\0--remote-debugging-port=9222\0") });
 
         var checker = Substitute.For<ICdpChecker>();
         checker.IsRespondingAsync(9222).Returns(false);
@@ -63,10 +63,10 @@ public sealed class CdpPortDiscoveryTests
     }
 
     [Fact]
-    public async Task FindExistingPortAsync_WhenNoVivaldiProcesses_ReturnsNull()
+    public async Task FindExistingPortAsync_WhenNoProcessesWithCdpPort_ReturnsNull()
     {
         var reader = Substitute.For<IProcessCmdlineReader>();
-        reader.GetByName("vivaldi").Returns(Array.Empty<(int, string?)>());
+        reader.GetAll().Returns(new[] { (Pid: 1234, Cmdline: (string?)"some-process\0--no-sandbox\0") });
 
         var sut = new CdpPortDiscovery(reader, Substitute.For<ICdpChecker>(), Substitute.For<ILogger<CdpPortDiscovery>>());
 

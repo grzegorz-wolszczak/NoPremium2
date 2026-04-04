@@ -1,23 +1,24 @@
-using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace NoPremium2.Browser;
 
 public interface IProcessCmdlineReader
 {
-    IEnumerable<(int Pid, string? Cmdline)> GetByName(string processName);
+    IEnumerable<(int Pid, string? Cmdline)> GetAll();
 }
 
 public sealed class LinuxProcessCmdlineReader : IProcessCmdlineReader
 {
-    public IEnumerable<(int Pid, string? Cmdline)> GetByName(string processName)
+    public IEnumerable<(int Pid, string? Cmdline)> GetAll()
     {
-        foreach (var proc in Process.GetProcessesByName(processName))
+        foreach (var dir in Directory.GetDirectories("/proc"))
         {
-            string path = $"/proc/{proc.Id}/cmdline";
+            if (!int.TryParse(Path.GetFileName(dir), out int pid)) continue;
+            string cmdlinePath = Path.Combine(dir, "cmdline");
             string? cmdline = null;
-            try { cmdline = File.Exists(path) ? File.ReadAllText(path) : null; } catch { }
-            yield return (proc.Id, cmdline);
+            try { cmdline = File.Exists(cmdlinePath) ? File.ReadAllText(cmdlinePath) : null; } catch { }
+            if (cmdline != null)
+                yield return (pid, cmdline);
         }
     }
 }
@@ -40,23 +41,16 @@ public sealed class CdpPortDiscovery : ICdpPortDiscovery
         _logger = logger;
     }
 
-    // Process names to check, in priority order (Chrome > Vivaldi)
-    private static readonly string[] BrowserProcessNames =
-        new[] { "chrome", "google-chrome", "chromium", "chromium-browser", "vivaldi" };
-
     public async Task<int?> FindExistingPortAsync()
     {
-        foreach (var browserName in BrowserProcessNames)
+        foreach (var (pid, cmdline) in _cmdlineReader.GetAll())
         {
-            foreach (var (pid, cmdline) in _cmdlineReader.GetByName(browserName))
+            int? port = ParsePort(cmdline);
+            if (port is null) continue;
+            if (await _cdpChecker.IsRespondingAsync(port.Value))
             {
-                int? port = ParsePort(cmdline);
-                if (port is null) continue;
-                if (await _cdpChecker.IsRespondingAsync(port.Value))
-                {
-                    _logger.LogDebug("Found {Browser} (PID {Pid}) with CDP on port {Port}", browserName, pid, port);
-                    return port;
-                }
+                _logger.LogDebug("Found browser (PID {Pid}) with CDP on port {Port}", pid, port);
+                return port;
             }
         }
         _logger.LogDebug("No existing browser with open CDP port found");
@@ -64,7 +58,7 @@ public sealed class CdpPortDiscovery : ICdpPortDiscovery
     }
 
     /// <summary>Parses --remote-debugging-port=XXXX from a null-delimited cmdline string.</summary>
-    internal static int? ParsePort(string? cmdline)
+    public static int? ParsePort(string? cmdline)
     {
         if (cmdline is null) return null;
         const string flag = "--remote-debugging-port=";
