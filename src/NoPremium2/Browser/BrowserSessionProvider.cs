@@ -26,7 +26,7 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
     private readonly IBrowserManager _browserManager;
     private readonly ILoginService _loginService;
     private readonly AppConfig _config;
-    private readonly NoPremium2.Infrastructure.SessionPageSaver _sessionPageSaver;
+    //private readonly NoPremium2.Infrastructure.SessionPageSaver _sessionPageSaver;
     private readonly ILogger<BrowserSessionProvider> _logger;
 
     public BrowserSessionProvider(
@@ -39,7 +39,7 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
         _browserManager = browserManager;
         _loginService = loginService;
         _config = config;
-        _sessionPageSaver = sessionPageSaver;
+        //_sessionPageSaver = sessionPageSaver;
         _logger = logger;
     }
 
@@ -98,7 +98,7 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
 
         _logger.LogInformation("Starting browser session...");
         _session = await _browserManager.GetOrLaunchAsync(ct);
-        _sessionPageSaver.AttachToPage(_session.Page);
+        //_sessionPageSaver.AttachToPage(_session.Page);
 
         _logger.LogInformation("Logging in to nopremium.pl...");
         var result = await _loginService.LoginAsync(

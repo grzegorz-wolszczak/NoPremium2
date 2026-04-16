@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace NoPremium2.Config;
 
-public static class ConfigLoader
+public  class ConfigLoader
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

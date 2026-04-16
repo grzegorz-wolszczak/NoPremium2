@@ -39,7 +39,10 @@ internal sealed class Program
         // ─────────────────────────────────────────────────────────────────────
         // 3.  Load and validate configuration
         // ─────────────────────────────────────────────────────────────────────
-        var msBootstrapLogger = new LoggerFactory().AddSerilog(bootstrapLogger).CreateLogger<object>();
+        var msBootstrapLogger = new LoggerFactory()
+            .AddSerilog(bootstrapLogger)
+            .CreateLogger<object>();
+
         // ConfigLoader calls Environment.Exit(1) on any validation error
         AppConfig config = ConfigLoader.LoadAppConfig(configFilePath, msBootstrapLogger);
         LinksConfig links = ConfigLoader.LoadLinksConfig(configFilePath, config);
