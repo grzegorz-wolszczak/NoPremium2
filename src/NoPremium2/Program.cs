@@ -137,7 +137,7 @@ internal sealed class Program
 
                 // Infrastructure
                 services.AddSingleton<ITimeService, TimeService>();
-                services.AddSingleton<NoPremium2.Infrastructure.SessionPageSaver>();
+                // services.AddSingleton<NoPremium2.Infrastructure.SessionPageSaver>();
 
                 // Browser infrastructure
                 services.AddSingleton<ICdpChecker, HttpCdpChecker>();

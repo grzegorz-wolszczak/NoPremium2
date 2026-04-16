@@ -10,6 +10,7 @@ namespace NoPremium2.Services;
 
 public sealed class VoucherConsumerService : BackgroundService
 {
+    private static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);
     private readonly IBrowserSessionProvider _sessionProvider;
     private readonly IEmailService _emailService;
     private readonly NoPremiumBrowserClient _client;
@@ -42,7 +43,9 @@ public sealed class VoucherConsumerService : BackgroundService
 
         _startTime = ScheduleHelper.ParseTimeOnly(_config.StartTime, "23:00");
         _endTime = ScheduleHelper.ParseTimeOnly(_config.EndTime, "23:55");
-        _interval = TimeSpan.FromMinutes(_config.IntervalMinutes > 0 ? _config.IntervalMinutes : DefaultConstants.ScheduleIntervalMinutes);
+        _interval = TimeSpan.FromMinutes(_config.IntervalMinutes > 0
+            ? _config.IntervalMinutes
+            : DefaultConstants.ScheduleIntervalMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -61,7 +64,7 @@ public sealed class VoucherConsumerService : BackgroundService
                 if (wait > TimeSpan.Zero)
                 {
                     _logger.LogDebug("VoucherConsumer: next run in {Wait}", wait);
-                    await Task.Delay(wait < TimeSpan.FromMinutes(1) ? wait : TimeSpan.FromMinutes(1), stoppingToken);
+                    await Task.Delay(wait < OneMinute ? wait : OneMinute, stoppingToken);
                     continue;
                 }
 
@@ -77,7 +80,13 @@ public sealed class VoucherConsumerService : BackgroundService
                 if (stoppingToken.IsCancellationRequested)
                     break;
                 _logger.LogError(ex, "VoucherConsumerService run failed");
-                try { await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); } catch { }
+                try
+                {
+                    await Task.Delay(OneMinute, stoppingToken);
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -108,56 +117,56 @@ public sealed class VoucherConsumerService : BackgroundService
         _activity.Enter();
         try
         {
-        var seenUids = new List<MailKit.UniqueId>();
+            var seenUids = new List<MailKit.UniqueId>();
 
-        foreach (var voucher in vouchers)
-        {
-            ct.ThrowIfCancellationRequested();
+            foreach (var voucher in vouchers)
+            {
+                ct.ThrowIfCancellationRequested();
 
-            VoucherResult result = VoucherResult.UnknownResponse;
-            try
-            {
-                result = await _sessionProvider.UsePageAsync(
-                    async page => await _client.ConsumeVoucherAsync(page, voucher.Code, ct),
-                    ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error consuming voucher '{Code}'", voucher.Code);
-                continue;
+                VoucherResult result = VoucherResult.UnknownResponse;
+                try
+                {
+                    result = await _sessionProvider.UsePageAsync(
+                        async page => await _client.ConsumeVoucherAsync(page, voucher.Code, ct),
+                        ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error consuming voucher '{Code}'", voucher.Code);
+                    continue;
+                }
+
+                // Mark as seen regardless of result (except unknown — don't want to lose it if something weird happened)
+                switch (result)
+                {
+                    case VoucherResult.Success:
+                    case VoucherResult.InvalidCode:
+                    case VoucherResult.AlreadyUsed:
+                    case VoucherResult.Expired:
+                        seenUids.Add(voucher.Uid);
+                        break;
+                    case VoucherResult.CaptchaDetected:
+                        _logger.LogError("CAPTCHA detected, stopping voucher processing for this run");
+                        goto done;
+                    case VoucherResult.UnknownResponse:
+                        _logger.LogWarning("Voucher '{Code}' had unknown response — not marking as seen", voucher.Code);
+                        break;
+                }
             }
 
-            // Mark as seen regardless of result (except unknown — don't want to lose it if something weird happened)
-            switch (result)
+            done:
+            // Step 3: Mark consumed emails as seen
+            if (seenUids.Count > 0)
             {
-                case VoucherResult.Success:
-                case VoucherResult.InvalidCode:
-                case VoucherResult.AlreadyUsed:
-                case VoucherResult.Expired:
-                    seenUids.Add(voucher.Uid);
-                    break;
-                case VoucherResult.CaptchaDetected:
-                    _logger.LogError("CAPTCHA detected, stopping voucher processing for this run");
-                    goto done;
-                case VoucherResult.UnknownResponse:
-                    _logger.LogWarning("Voucher '{Code}' had unknown response — not marking as seen", voucher.Code);
-                    break;
+                try
+                {
+                    await _emailService.MarkAsSeenAsync(seenUids, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to mark {Count} email(s) as seen", seenUids.Count);
+                }
             }
-        }
-
-        done:
-        // Step 3: Mark consumed emails as seen
-        if (seenUids.Count > 0)
-        {
-            try
-            {
-                await _emailService.MarkAsSeenAsync(seenUids, ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to mark {Count} email(s) as seen", seenUids.Count);
-            }
-        }
         }
         finally
         {

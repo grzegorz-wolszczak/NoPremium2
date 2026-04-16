@@ -1,8 +1,6 @@
 using System.Globalization;
 using System.Net.Sockets;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Playwright;
 
 namespace NoPremium2.Infrastructure;
 
@@ -50,32 +48,32 @@ public sealed class TimeService : ITimeService
         return localDateTime;
     }
 
-    private async Task<DateTime> TryGetTimeFromTimeServer(CancellationToken ct)
-    {
-        try
-        {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-            var json = await _http.GetStringAsync(TimeApiUrl, cts.Token);
-            using var doc = JsonDocument.Parse(json);
-
-            var dateTimeStr = doc.RootElement.GetProperty("datetime").GetString()
-                              ?? throw new InvalidOperationException("Missing 'datetime' field in response");
-
-            var dt = DateTimeOffset.Parse(dateTimeStr, null,
-                System.Globalization.DateTimeStyles.RoundtripKind);
-
-            _logger.LogDebug("External time fetched: {Time}", dt);
-            return dt.LocalDateTime;
-        }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-        {
-            _logger.LogWarning("Time server request timed out, falling back to local clock");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to fetch time from external server, falling back to local clock");
-        }
-    }
+    // private async Task<DateTime> TryGetTimeFromTimeServer(CancellationToken ct)
+    // {
+    //     try
+    //     {
+    //         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+    //         cts.CancelAfter(TimeSpan.FromSeconds(5));
+    //
+    //         var json = await _http.GetStringAsync(TimeApiUrl, cts.Token);
+    //         using var doc = JsonDocument.Parse(json);
+    //
+    //         var dateTimeStr = doc.RootElement.GetProperty("datetime").GetString()
+    //                           ?? throw new InvalidOperationException("Missing 'datetime' field in response");
+    //
+    //         var dt = DateTimeOffset.Parse(dateTimeStr, null,
+    //             System.Globalization.DateTimeStyles.RoundtripKind);
+    //
+    //         _logger.LogDebug("External time fetched: {Time}", dt);
+    //         return dt.LocalDateTime;
+    //     }
+    //     catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+    //     {
+    //         _logger.LogWarning("Time server request timed out, falling back to local clock");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogWarning(ex, "Failed to fetch time from external server, falling back to local clock");
+    //     }
+    // }
 }

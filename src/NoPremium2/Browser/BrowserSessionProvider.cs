@@ -33,7 +33,7 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
         IBrowserManager browserManager,
         ILoginService loginService,
         AppConfig config,
-        NoPremium2.Infrastructure.SessionPageSaver sessionPageSaver,
+        // NoPremium2.Infrastructure.SessionPageSaver sessionPageSaver,
         ILogger<BrowserSessionProvider> logger)
     {
         _browserManager = browserManager;

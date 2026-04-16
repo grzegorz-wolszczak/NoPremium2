@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
-using NoPremium2.Config;
 using NoPremium2.Infrastructure;
 
 namespace NoPremium2.NoPremium;
@@ -32,12 +31,14 @@ public sealed class NoPremiumBrowserClient
         @"Pozostały transfer:\s*(?<total>[\d.,]+)\s*(?<totalUnit>GB|MB|TB|KB)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private readonly SessionPageSaver _sessionPageSaver;
+    //private readonly SessionPageSaver _sessionPageSaver;
     private readonly ILogger<NoPremiumBrowserClient> _logger;
 
-    public NoPremiumBrowserClient(SessionPageSaver sessionPageSaver, ILogger<NoPremiumBrowserClient> logger)
+    public NoPremiumBrowserClient(
+        // SessionPageSaver sessionPageSaver,
+        ILogger<NoPremiumBrowserClient> logger)
     {
-        _sessionPageSaver = sessionPageSaver;
+        //_sessionPageSaver = sessionPageSaver;
         _logger = logger;
     }
 
@@ -141,7 +142,7 @@ public sealed class NoPremiumBrowserClient
         // Wait for AJAX/navigation triggered by the submit to settle, then capture page state
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 15_000 });
         await LogPageDiagnosticsAsync(page);
-        await _sessionPageSaver.CaptureAsync(page);
+        //await _sessionPageSaver.CaptureAsync(page);
 
         // Wait for the "Przetwarzane pliki" section to appear
         // It contains processed (valid) files with checkboxes
