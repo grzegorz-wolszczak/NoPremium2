@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
 
-base_dir="/media/gary/D_DRIVE/repos/NoPremium2/src/NoPremium2"
+base_dir="$HOME/repos/NoPremium2/src/NoPremium2"
 bin_dir="bin/Debug/net10.0"
 app_name="NoPremium2"
 
-dir='/media/gary/D_DRIVE/repos/NoPremium2/src/NoPremium2/bin/Debug/net10.0'
-
+dir="$HOMErepos/NoPremium2/src/NoPremium2/bin/Debug/net10.0"
 
 config_file_path="${HOME}/nopremium.config.json"
 
