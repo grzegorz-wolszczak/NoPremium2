@@ -9,14 +9,14 @@ namespace NoPremium2.Infrastructure;
 /// {seq:D3}_{HHmmss_fff}_{url-slug}.html inside that directory.
 /// Designed for post-mortem debugging: inspect actual HTML, JS-rendered DOM, selectors, etc.
 /// </summary>
-public sealed class SessionPageSaver
+public sealed class _SessionPageSaver
 {
     public string SessionDir { get; }
 
     private int _counter;
-    private readonly ILogger<SessionPageSaver> _logger;
+    private readonly ILogger<_SessionPageSaver> _logger;
 
-    public SessionPageSaver(ILogger<SessionPageSaver> logger)
+    public _SessionPageSaver(ILogger<_SessionPageSaver> logger)
     {
         _logger = logger;
         var sessionName = DateTime.Now.ToString("yyyyMMdd_HHmmss");

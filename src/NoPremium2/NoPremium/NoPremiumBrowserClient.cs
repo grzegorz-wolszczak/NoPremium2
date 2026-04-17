@@ -32,12 +32,14 @@ public sealed class NoPremiumBrowserClient
         @"Pozostały transfer:\s*(?<total>[\d.,]+)\s*(?<totalUnit>GB|MB|TB|KB)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private readonly SessionPageSaver _sessionPageSaver;
+    //private readonly SessionPageSaver _sessionPageSaver;
     private readonly ILogger<NoPremiumBrowserClient> _logger;
 
-    public NoPremiumBrowserClient(SessionPageSaver sessionPageSaver, ILogger<NoPremiumBrowserClient> logger)
+    public NoPremiumBrowserClient(
+        //SessionPageSaver sessionPageSaver,
+        ILogger<NoPremiumBrowserClient> logger)
     {
-        _sessionPageSaver = sessionPageSaver;
+        //_sessionPageSaver = sessionPageSaver;
         _logger = logger;
     }
 
@@ -225,7 +227,7 @@ public sealed class NoPremiumBrowserClient
             if (modalAppeared)
             {
                 _logger.LogDebug("jQuery confirmation modal appeared — capturing and confirming");
-                await _sessionPageSaver.CaptureAsync(page);
+               // await _sessionPageSaver.CaptureAsync(page);
 
                 // Find confirmation button by common Polish text patterns
                 var confirmBtn = page.Locator(".blocker.current")
@@ -249,7 +251,7 @@ public sealed class NoPremiumBrowserClient
 
         // Wait for the deletion AJAX to complete
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 30_000 });
-        await _sessionPageSaver.CaptureAsync(page);
+        //await _sessionPageSaver.CaptureAsync(page);
 
         _logger.LogInformation("Deleted {Count} entry/entries from /files queue", toDelete.Count);
         return toDelete.Count;
@@ -290,7 +292,7 @@ public sealed class NoPremiumBrowserClient
         // Capture page state immediately after click so we can inspect what submitFiles() did
         // synchronously (before async AJAX changes). Useful for diagnosing why #insertPanel
         // might not hide when expected.
-        await _sessionPageSaver.CaptureAsync(page);
+       // await _sessionPageSaver.CaptureAsync(page);
 
         var domAfterClick = await page.EvaluateAsync<string>(
             "() => { var ip=document.getElementById('insertPanel'); var pp=document.getElementById('progressPanel'); var ta=document.getElementById('filesList'); " +
@@ -324,7 +326,7 @@ public sealed class NoPremiumBrowserClient
         await progressPanel.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 120_000 });
         _logger.LogDebug("Server processing complete (#progressPanel hidden)");
 
-        await _sessionPageSaver.CaptureAsync(page);
+        //await _sessionPageSaver.CaptureAsync(page);
 
         // Phase 4: Click "Dodaj zaznaczone" if any links were recognised.
         // The button only appears when at least one link was accepted by the server.
@@ -347,7 +349,7 @@ public sealed class NoPremiumBrowserClient
         }
 
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = 30_000 });
-        await _sessionPageSaver.CaptureAsync(page);
+        //await _sessionPageSaver.CaptureAsync(page);
 
         _logger.LogInformation("Successfully queued {Count} link(s)", urlList.Count);
         return urlList.Count;
