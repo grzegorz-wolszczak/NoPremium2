@@ -47,11 +47,11 @@ public sealed class AppSettingsTests
         settings.TurnstileTimeoutMs.Should().Be(60_000);
     }
 
-    private static AppConfig ConfigWith(
+    private static BaseConfig ConfigWith(
         string loginUrl        = "https://www.nopremium.pl/login",
         int cdpTimeout         = 10_000,
         int turnstileTimeout   = 120_000) =>
-        new AppConfig
+        new BaseConfig
         {
             NoPremiumUsername = "u",
             NoPremiumPassword = "p",

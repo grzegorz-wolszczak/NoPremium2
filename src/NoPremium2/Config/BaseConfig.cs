@@ -1,6 +1,35 @@
 namespace NoPremium2.Config;
 
+public sealed record MailConfig
+{
+    // var (imapHost, imapPort)
+    public required string MailHost { get; init; }
+    public required int MailPort { get; init; }
+}
+
 public sealed record AppConfig
+{
+    public required BaseConfig BaseConfig { get; init; }
+    public required LinksConfig LinksConfig { get; init; }
+    public required MailConfig MailConfig { get; init; }
+    public required string LogDir { get; init; }
+}
+
+public sealed class LinksConfig
+{
+    public List<LinkEntry> Links { get; init; } = new();
+}
+
+public sealed class LinkEntry
+{
+    public string Name { get; init; } = "";
+    public string Url { get; init; } = "";
+    /// <summary>Size string, e.g. "512MB" or "3GB". Used to estimate transfer budget.</summary>
+    public string Size { get; init; } = "";
+}
+
+
+public sealed record BaseConfig
 {
     // --- Required ---
     public string NoPremiumUsername { get; init; } = "";

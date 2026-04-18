@@ -18,7 +18,7 @@ public sealed class KeepaliveService : BackgroundService
         IBrowserSessionProvider sessionProvider,
         NoPremiumBrowserClient client,
         ConsumerActivityState activity,
-        AppConfig config,
+        BaseConfig config,
         ILogger<KeepaliveService> logger)
     {
         _sessionProvider = sessionProvider;

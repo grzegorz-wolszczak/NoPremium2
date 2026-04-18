@@ -1,10 +1,13 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using NoPremium2.Infrastructure;
 
 namespace NoPremium2.Config;
 
 public  class ConfigLoader
 {
+    private readonly ILogger _logger;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -12,7 +15,114 @@ public  class ConfigLoader
         AllowTrailingCommas = true,
     };
 
-    public static AppConfig LoadAppConfig(string filePath, ILogger logger)
+    public ConfigLoader(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    public AppConfig LoadConfig(string filePath)
+    {
+        BaseConfig config = LoadAppConfig(filePath);
+        LinksConfig links = LoadLinksConfig(filePath, config);
+        ValidateLinks(links, filePath);
+        ValidateScheduleOverlap(config);
+        var (imapHost, imapPort) = ParseImapServer(config.EmailImapServer);
+
+        string logDir;
+        if (string.IsNullOrWhiteSpace(config.LogFileDir))
+        {
+            logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
+        }
+        else if (Path.IsPathRooted(config.LogFileDir))
+        {
+            logDir = config.LogFileDir;
+        }
+        else
+        {
+            logDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, config.LogFileDir));
+        }
+
+        return new AppConfig()
+        {
+            LogDir = logDir,
+            BaseConfig = config,
+            LinksConfig = links,
+            MailConfig = new MailConfig()
+            {
+                MailHost = imapHost,
+                MailPort = imapPort,
+            }
+        };
+    }
+
+    /// <summary>
+    /// Validates that every link entry has a non-empty URL and a parseable Size field.
+    /// Calls Environment.Exit(1) on the first invalid entry.
+    /// </summary>
+    private static void ValidateLinks(LinksConfig links, string configFilePath)
+    {
+        var errors = new List<string>();
+
+        for (int i = 0; i < links.Links.Count; i++)
+        {
+            var entry = links.Links[i];
+            string label = string.IsNullOrWhiteSpace(entry.Name) ? $"[{i}]" : $"'{entry.Name}'";
+
+            if (string.IsNullOrWhiteSpace(entry.Url))
+                errors.Add($"  Link {label}: missing URL");
+
+            if (string.IsNullOrWhiteSpace(entry.Size))
+            {
+                errors.Add($"  Link {label}: missing Size");
+            }
+            else
+            {
+                try
+                {
+                    DataSizeConverter.ParseToBytes(entry.Size);
+                }
+                catch (FormatException)
+                {
+                    errors.Add($"  Link {label}: cannot parse Size '{entry.Size}'");
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                Console.Error.WriteLine($"[STARTUP ERROR] Links file referenced from '{configFilePath}' contains invalid entries:");
+                foreach (var e in errors)
+                    Console.Error.WriteLine(e);
+                Environment.Exit(1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Validates that the TransferConsumer and VoucherConsumer schedules do not overlap.
+    /// Calls Environment.Exit(1) if they do.
+    /// </summary>
+    private static void ValidateScheduleOverlap(BaseConfig config)
+    {
+        var tc = config.TransferConsumer;
+        var vc = config.VoucherConsumer;
+
+        var tcStart = Services.ScheduleHelper.ParseTimeOnly(tc.StartTime, Config.DefaultConstants.ScheduleStartTime);
+        var tcEnd   = Services.ScheduleHelper.ParseTimeOnly(tc.EndTime,   Config.DefaultConstants.ScheduleEndTime);
+        var vcStart = Services.ScheduleHelper.ParseTimeOnly(vc.StartTime, Config.DefaultConstants.ScheduleStartTime);
+        var vcEnd   = Services.ScheduleHelper.ParseTimeOnly(vc.EndTime,   Config.DefaultConstants.ScheduleEndTime);
+
+        if (Services.ScheduleHelper.SchedulesOverlap(tcStart, tcEnd, vcStart, vcEnd))
+        {
+            Console.Error.WriteLine(
+                $"[STARTUP ERROR] TransferConsumer schedule ({tc.StartTime}–{tc.EndTime}) overlaps with " +
+                $"VoucherConsumer schedule ({vc.StartTime}–{vc.EndTime}). " +
+                "These schedules must not overlap to avoid browser navigation conflicts.");
+            Environment.Exit(1);
+        }
+    }
+
+
+    public BaseConfig LoadAppConfig(string filePath)
     {
         if (!File.Exists(filePath))
             ExitWithError($"Config file not found: {filePath}");
@@ -28,10 +138,10 @@ public  class ConfigLoader
             return null!; // unreachable
         }
 
-        AppConfig? config;
+        BaseConfig? config;
         try
         {
-            config = JsonSerializer.Deserialize<AppConfig>(json, JsonOptions);
+            config = JsonSerializer.Deserialize<BaseConfig>(json, JsonOptions);
         }
         catch (Exception ex)
         {
@@ -60,14 +170,14 @@ public  class ConfigLoader
         if (missing.Count > 0)
             ExitWithError($"Missing required configuration fields: {string.Join(", ", missing)}");
 
-        logger.LogInformation("Config loaded from: {Path}", filePath);
+        _logger.LogInformation("Config loaded from: {Path}", filePath);
         return config;
     }
 
     /// <summary>
     /// Resolves the LinksFilePath from AppConfig (may be relative) then loads the file.
     /// </summary>
-    public static LinksConfig LoadLinksConfig(string configFilePath, AppConfig config)
+    public LinksConfig LoadLinksConfig(string configFilePath, BaseConfig config)
     {
         string resolvedPath;
         try
@@ -89,7 +199,7 @@ public  class ConfigLoader
         return LoadLinksConfig(resolvedPath);
     }
 
-    public static LinksConfig LoadLinksConfig(string filePath)
+    private static LinksConfig LoadLinksConfig(string filePath)
     {
         if (!File.Exists(filePath))
             ExitWithError($"Links file not found: {filePath}");
@@ -133,7 +243,7 @@ public  class ConfigLoader
         return (parts[0], port);
     }
 
-    public static AppConfig ApplyDefaults(AppConfig config)
+    public static BaseConfig ApplyDefaults(BaseConfig config)
     {
         var tc = config.TransferConsumer;
         var vc = config.VoucherConsumer;

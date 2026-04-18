@@ -28,7 +28,7 @@ public sealed class VoucherConsumerService : BackgroundService
         IEmailService emailService,
         NoPremiumBrowserClient client,
         ITimeService timeService,
-        AppConfig config,
+        BaseConfig config,
         ConsumerActivityState activity,
         ILogger<VoucherConsumerService> logger)
     {

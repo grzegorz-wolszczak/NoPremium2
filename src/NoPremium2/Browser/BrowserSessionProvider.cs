@@ -25,14 +25,14 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
 
     private readonly IBrowserManager _browserManager;
     private readonly ILoginService _loginService;
-    private readonly AppConfig _config;
+    private readonly BaseConfig _config;
     //private readonly NoPremium2.Infrastructure.SessionPageSaver _sessionPageSaver;
     private readonly ILogger<BrowserSessionProvider> _logger;
 
     public BrowserSessionProvider(
         IBrowserManager browserManager,
         ILoginService loginService,
-        AppConfig config,
+        BaseConfig config,
         //NoPremium2.Infrastructure.SessionPageSaver sessionPageSaver,
         ILogger<BrowserSessionProvider> logger)
     {

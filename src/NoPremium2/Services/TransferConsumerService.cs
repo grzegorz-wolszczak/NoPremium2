@@ -32,7 +32,7 @@ public sealed class TransferConsumerService : BackgroundService
         NoPremiumBrowserClient client,
         ITimeService timeService,
         LinksConfig links,
-        AppConfig config,
+        BaseConfig config,
         ConsumerActivityState activity,
         ILogger<TransferConsumerService> logger)
     {

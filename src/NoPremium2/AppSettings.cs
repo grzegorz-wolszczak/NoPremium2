@@ -13,7 +13,7 @@ public sealed record AppSettings
     public int TurnstileTimeoutMs { get; init; } = DefaultConstants.TurnstileTimeoutMs;
 
     /// <summary>Creates AppSettings populated from an AppConfig instance.</summary>
-    public static AppSettings From(Config.AppConfig config) => new()
+    public static AppSettings From(Config.BaseConfig config) => new()
     {
         LoginUrl = config.LoginUrl,
         CdpReadyTimeoutMs = config.CdpReadyTimeoutMs,

@@ -39,16 +39,17 @@ internal sealed class Program
         // ─────────────────────────────────────────────────────────────────────
         // 3.  Load and validate configuration
         // ─────────────────────────────────────────────────────────────────────
-        var msBootstrapLogger = new LoggerFactory()
+        ILogger<Program> msBootstrapLogger = new LoggerFactory()
             .AddSerilog(bootstrapLogger)
-            .CreateLogger<object>();
+            .CreateLogger<Program>();
 
+        var configLoader = new ConfigLoader(msBootstrapLogger);
         // ConfigLoader calls Environment.Exit(1) on any validation error
-        AppConfig config = ConfigLoader.LoadAppConfig(configFilePath, msBootstrapLogger);
-        LinksConfig links = ConfigLoader.LoadLinksConfig(configFilePath, config);
-        ValidateLinks(links, configFilePath);
-        ValidateScheduleOverlap(config);
-        var (imapHost, imapPort) = ConfigLoader.ParseImapServer(config.EmailImapServer);
+        //BaseConfig config = configLoader.LoadAppConfig(configFilePath);
+        //LinksConfig links = configLoader.LoadLinksConfig(configFilePath, config);
+        //var (imapHost, imapPort) = ConfigLoader.ParseImapServer(config.EmailImapServer);
+
+        var appConfig = configLoader.LoadConfig(configFilePath);
 
         // ─────────────────────────────────────────────────────────────────────
         // 4.  Single instance guard
@@ -82,20 +83,8 @@ internal sealed class Program
         // ─────────────────────────────────────────────────────────────────────
         // 6.  Resolve log directory (Task 3: configurable LogFileDir)
         // ─────────────────────────────────────────────────────────────────────
-        string logDir;
-        if (string.IsNullOrWhiteSpace(config.LogFileDir))
-        {
-            logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
-        }
-        else if (Path.IsPathRooted(config.LogFileDir))
-        {
-            logDir = config.LogFileDir;
-        }
-        else
-        {
-            logDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, config.LogFileDir));
-        }
 
+        var logDir = appConfig.LogDir;
         try
         {
             Directory.CreateDirectory(logDir);
@@ -119,6 +108,10 @@ internal sealed class Program
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
 
+        var config = appConfig.BaseConfig;
+        var links = appConfig.LinksConfig;
+        var emailConfig = appConfig.MailConfig;
+
         // ─────────────────────────────────────────────────────────────────────
         // 7.  Log effective configuration (passwords masked)
         // ─────────────────────────────────────────────────────────────────────
@@ -131,7 +124,7 @@ internal sealed class Program
         Log.Information("NoPremium password:       {Pass}", "***");
         Log.Information("Email username:           {User}", config.EmailUsername);
         Log.Information("Email password:           {Pass}", "***");
-        Log.Information("Email IMAP:               {Host}:{Port}", imapHost, imapPort);
+        Log.Information("Email IMAP:               {Host}:{Port}", emailConfig.MailHost, emailConfig.MailPort);
         Log.Information("Transfer consumer:        {Start}–{End} every {Interval} min, reserve {Reserve} bytes",
             config.TransferConsumer.StartTime, config.TransferConsumer.EndTime,
             config.TransferConsumer.IntervalMinutes, config.TransferConsumer.ReserveTransferBytes);
@@ -185,7 +178,7 @@ internal sealed class Program
                 // Email
                 services.AddSingleton(new VoucherCodeExtractor());
                 services.AddSingleton<IEmailService>(sp => new EmailService(
-                    imapHost, imapPort,
+                    emailConfig.MailHost, emailConfig.MailPort,
                     config.EmailUsername, config.EmailPassword,
                     sp.GetRequiredService<VoucherCodeExtractor>(),
                     sp.GetRequiredService<ILogger<EmailService>>()));
@@ -257,69 +250,7 @@ internal sealed class Program
         }
     }
 
-    /// <summary>
-    /// Validates that the TransferConsumer and VoucherConsumer schedules do not overlap.
-    /// Calls Environment.Exit(1) if they do.
-    /// </summary>
-    private static void ValidateScheduleOverlap(AppConfig config)
-    {
-        var tc = config.TransferConsumer;
-        var vc = config.VoucherConsumer;
 
-        var tcStart = Services.ScheduleHelper.ParseTimeOnly(tc.StartTime, Config.DefaultConstants.ScheduleStartTime);
-        var tcEnd   = Services.ScheduleHelper.ParseTimeOnly(tc.EndTime,   Config.DefaultConstants.ScheduleEndTime);
-        var vcStart = Services.ScheduleHelper.ParseTimeOnly(vc.StartTime, Config.DefaultConstants.ScheduleStartTime);
-        var vcEnd   = Services.ScheduleHelper.ParseTimeOnly(vc.EndTime,   Config.DefaultConstants.ScheduleEndTime);
 
-        if (Services.ScheduleHelper.SchedulesOverlap(tcStart, tcEnd, vcStart, vcEnd))
-        {
-            Console.Error.WriteLine(
-                $"[STARTUP ERROR] TransferConsumer schedule ({tc.StartTime}–{tc.EndTime}) overlaps with " +
-                $"VoucherConsumer schedule ({vc.StartTime}–{vc.EndTime}). " +
-                "These schedules must not overlap to avoid browser navigation conflicts.");
-            Environment.Exit(1);
-        }
-    }
 
-    /// <summary>
-    /// Validates that every link entry has a non-empty URL and a parseable Size field.
-    /// Calls Environment.Exit(1) on the first invalid entry.
-    /// </summary>
-    private static void ValidateLinks(LinksConfig links, string configFilePath)
-    {
-        var errors = new List<string>();
-
-        for (int i = 0; i < links.Links.Count; i++)
-        {
-            var entry = links.Links[i];
-            string label = string.IsNullOrWhiteSpace(entry.Name) ? $"[{i}]" : $"'{entry.Name}'";
-
-            if (string.IsNullOrWhiteSpace(entry.Url))
-                errors.Add($"  Link {label}: missing URL");
-
-            if (string.IsNullOrWhiteSpace(entry.Size))
-            {
-                errors.Add($"  Link {label}: missing Size");
-            }
-            else
-            {
-                try
-                {
-                    DataSizeConverter.ParseToBytes(entry.Size);
-                }
-                catch (FormatException)
-                {
-                    errors.Add($"  Link {label}: cannot parse Size '{entry.Size}'");
-                }
-            }
-        }
-
-        if (errors.Count > 0)
-        {
-            Console.Error.WriteLine($"[STARTUP ERROR] Links file referenced from '{configFilePath}' contains invalid entries:");
-            foreach (var e in errors)
-                Console.Error.WriteLine(e);
-            Environment.Exit(1);
-        }
-    }
 }

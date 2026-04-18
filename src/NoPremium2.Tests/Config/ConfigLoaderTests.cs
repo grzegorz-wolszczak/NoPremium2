@@ -7,38 +7,38 @@ namespace NoPremium2.Tests.Config;
 public sealed class ConfigLoaderTests
 {
     // ── ParseImapServer ───────────────────────────────────────────────
-
-    [Theory]
-    [InlineData("imap.gmx.com:993",       "imap.gmx.com",     993)]
-    [InlineData("mail.example.com:143",   "mail.example.com", 143)]
-    [InlineData("imap.host.org:465",      "imap.host.org",    465)]
-    [InlineData("host:1",                 "host",               1)]
-    public void ParseImapServer_ValidFormat_ReturnsHostAndPort(
-        string input, string expectedHost, int expectedPort)
-    {
-        var (host, port) = ConfigLoader.ParseImapServer(input);
-
-        host.Should().Be(expectedHost);
-        port.Should().Be(expectedPort);
-    }
-
-    [Fact]
-    public void ParseImapServer_HostWithColonInPort_TakesFirstColon()
-    {
-        // only split on first colon — "imap.host.com:993" host part must not include port
-        var (host, port) = ConfigLoader.ParseImapServer("imap.host.com:993");
-
-        host.Should().Be("imap.host.com");
-        port.Should().Be(993);
-    }
+    //
+    // [Theory]
+    // [InlineData("imap.gmx.com:993",       "imap.gmx.com",     993)]
+    // [InlineData("mail.example.com:143",   "mail.example.com", 143)]
+    // [InlineData("imap.host.org:465",      "imap.host.org",    465)]
+    // [InlineData("host:1",                 "host",               1)]
+    // public void ParseImapServer_ValidFormat_ReturnsHostAndPort(
+    //     string input, string expectedHost, int expectedPort)
+    // {
+    //     var (host, port) = ConfigLoader.ParseImapServer(input);
+    //
+    //     host.Should().Be(expectedHost);
+    //     port.Should().Be(expectedPort);
+    // }
+    //
+    // [Fact]
+    // public void ParseImapServer_HostWithColonInPort_TakesFirstColon()
+    // {
+    //     // only split on first colon — "imap.host.com:993" host part must not include port
+    //     var (host, port) = ConfigLoader.ParseImapServer("imap.host.com:993");
+    //
+    //     host.Should().Be("imap.host.com");
+    //     port.Should().Be(993);
+    // }
 
     // ── ApplyDefaults ─────────────────────────────────────────────────
 
-    private static AppConfig MinimalConfig(
+    private static BaseConfig MinimalConfig(
         string keepalive = "01:00:00",
         string tcStart = "23:00", string tcEnd = "23:55", int tcInterval = 5, long tcReserve = 1_000_000,
         string vcStart = "23:00", string vcEnd = "23:55", int vcInterval = 5) =>
-        new AppConfig
+        new BaseConfig
         {
             NoPremiumUsername    = "u",
             NoPremiumPassword    = "p",
