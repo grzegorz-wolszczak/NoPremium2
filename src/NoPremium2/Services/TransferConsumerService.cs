@@ -66,7 +66,7 @@ public sealed class TransferConsumerService : BackgroundService
                 if (wait > TimeSpan.Zero)
                 {
                     _logger.LogDebug("TransferConsumer: next run in {Wait}", wait);
-                    await Task.Delay(wait < TimeSpan.FromMinutes(1) ? wait : TimeSpan.FromMinutes(1), stoppingToken);
+                    await Task.Delay( wait , stoppingToken);
                     continue;
                 }
 
