@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
-using NoPremium2.Config;
 using NoPremium2.Infrastructure;
 
 namespace NoPremium2.NoPremium;

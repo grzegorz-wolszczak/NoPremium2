@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Sockets;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace NoPremium2.Infrastructure;
 
 public interface ITimeService
 {
-    Task<DateTime> GetLocalTimeAsync(CancellationToken ct = default);
+    DateTime GetLocalTime();
 }
 
 public sealed class TimeService : ITimeService
@@ -29,50 +28,56 @@ public sealed class TimeService : ITimeService
         _logger = logger;
     }
 
-    public async Task<DateTime> GetLocalTimeAsync(CancellationToken ct = default)
+    public DateTime GetLocalTime()
     {
-        // 1. NTP UDP — most reliable (no HTTP/SSL, pool.ntp.org is extremely stable)
-        var ntpTime = await TryNtpAsync(ct);
-        if (ntpTime.HasValue)
-        {
-            _logger.LogDebug("NTP time: {Time}", ntpTime.Value);
-            return ntpTime.Value;
-        }
-
-        // 2. HTTP fallbacks
-        foreach (var (url, field) in HttpApis)
-        {
-            try
-            {
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-                var json = await _http.GetStringAsync(url, cts.Token);
-                using var doc = JsonDocument.Parse(json);
-
-                var dateTimeStr = doc.RootElement.GetProperty(field).GetString()
-                    ?? throw new InvalidOperationException($"Missing '{field}' in response");
-
-                // Parse with RoundtripKind: preserves UTC offset if present; otherwise treats as local
-                var dt = DateTime.Parse(dateTimeStr, null,
-                    System.Globalization.DateTimeStyles.RoundtripKind);
-
-                _logger.LogDebug("HTTP time from {Url}: {Time}", url, dt);
-                return dt.Kind == DateTimeKind.Utc ? dt.ToLocalTime() : dt;
-            }
-            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-            {
-                _logger.LogDebug("Time server {Url} timed out", url);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Time server {Url} failed", url);
-            }
-        }
-
-        _logger.LogWarning("All time servers failed, falling back to local clock");
+        //return await GetTimeFromInternet(ct);
         return DateTime.Now;
     }
+    //
+    // private async Task<DateTime> GetTimeFromInternet(CancellationToken ct)
+    // {
+    //     // 1. NTP UDP — most reliable (no HTTP/SSL, pool.ntp.org is extremely stable)
+    //     var ntpTime = await TryNtpAsync(ct);
+    //     if (ntpTime.HasValue)
+    //     {
+    //         //_logger.LogDebug("NTP time: {Time}", ntpTime.Value);
+    //         return ntpTime.Value;
+    //     }
+    //
+    //     // 2. HTTP fallbacks
+    //     foreach (var (url, field) in HttpApis)
+    //     {
+    //         try
+    //         {
+    //             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+    //             cts.CancelAfter(TimeSpan.FromSeconds(5));
+    //
+    //             var json = await _http.GetStringAsync(url, cts.Token);
+    //             using var doc = JsonDocument.Parse(json);
+    //
+    //             var dateTimeStr = doc.RootElement.GetProperty(field).GetString()
+    //                               ?? throw new InvalidOperationException($"Missing '{field}' in response");
+    //
+    //             // Parse with RoundtripKind: preserves UTC offset if present; otherwise treats as local
+    //             var dt = DateTime.Parse(dateTimeStr, null,
+    //                 System.Globalization.DateTimeStyles.RoundtripKind);
+    //
+    //             _logger.LogDebug("HTTP time from {Url}: {Time}", url, dt);
+    //             return dt.Kind == DateTimeKind.Utc ? dt.ToLocalTime() : dt;
+    //         }
+    //         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+    //         {
+    //             _logger.LogDebug("Time server {Url} timed out", url);
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             _logger.LogDebug(ex, "Time server {Url} failed", url);
+    //         }
+    //     }
+    //
+    //     _logger.LogWarning("All time servers failed, falling back to local clock");
+    //     return __;
+    // }
 
     private async Task<DateTime?> TryNtpAsync(CancellationToken ct)
     {

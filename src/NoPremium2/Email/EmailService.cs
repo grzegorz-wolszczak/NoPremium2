@@ -51,6 +51,10 @@ public sealed class EmailService : IEmailService
         await ConnectAndAuthenticateAsync(client, ct);
 
         var inbox = client.Inbox;
+        if (inbox is null)
+        {
+            throw new NoPremiumException("could not get inbox from mailkit (null)");
+        }
         await inbox.OpenAsync(FolderAccess.ReadOnly, ct);
 
         _logger.LogInformation("Total messages: {Total}, Recent: {Recent}", inbox.Count, inbox.Recent);
@@ -89,6 +93,10 @@ public sealed class EmailService : IEmailService
         await ConnectAndAuthenticateAsync(client, ct);
 
         var inbox = client.Inbox;
+        if (inbox is null)
+        {
+            throw new NoPremiumException("could not get inbox from mailkit (null)");
+        }
         await inbox.OpenAsync(FolderAccess.ReadWrite, ct);
 
         foreach (var uid in uids)
