@@ -57,10 +57,10 @@ public sealed class VoucherConsumerService : BackgroundService
             {
                 var now =  _timeService.GetLocalTime();
                 var wait = ScheduleHelper.TimeUntilNextRun(now, _startTime, _endTime, _interval, _lastRunAt);
-
+                var when = DateTimeOffset.Now.Add(wait);
                 if (wait > TimeSpan.Zero)
                 {
-                    _logger.LogDebug("VoucherConsumer: next run in {Wait}", wait);
+                    _logger.LogDebug("VoucherConsumer: next run in {Wait}, (at {When})", wait, when);
                     await Task.Delay(wait , stoppingToken);
                     continue;
                 }
