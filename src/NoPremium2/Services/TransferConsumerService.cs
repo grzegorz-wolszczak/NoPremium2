@@ -60,7 +60,7 @@ public sealed class TransferConsumerService : BackgroundService
         {
             try
             {
-                var now = await _timeService.GetLocalTimeAsync(stoppingToken);
+                var now =  _timeService.GetLocalTime();
                 var wait = ScheduleHelper.TimeUntilNextRun(now, _startTime, _endTime, _interval, _lastRunAt);
 
                 if (wait > TimeSpan.Zero)
