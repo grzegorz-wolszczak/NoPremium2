@@ -22,7 +22,7 @@ public sealed class TransferConsumerService : BackgroundService
     private readonly TimeSpan _interval;
 
     // Tracks URLs already queued in the current day's session (resets at midnight)
-    private readonly HashSet<string> _queuedToday = new(StringComparer.OrdinalIgnoreCase);
+    //private readonly HashSet<string> _queuedToday = new(StringComparer.OrdinalIgnoreCase);
     private DateTime _lastQueuedDate = DateTime.MinValue;
 
     private DateTime? _lastRunAt;
@@ -100,15 +100,15 @@ public sealed class TransferConsumerService : BackgroundService
         {
             await _sessionProvider.UsePageAsync(async page =>
             {
-                var candidates = _links.Links
-                    .Where(l => !_queuedToday.Contains(l.Url))
-                    .ToList();
-
-                if (candidates.Count == 0)
-                {
-                    _logger.LogInformation("No new links to process (all already queued today)");
-                    return;
-                }
+                 var candidates = _links.Links
+                //     .Where(l => !_queuedToday.Contains(l.Url))
+                     .ToList();
+                //
+                // if (candidates.Count == 0)
+                // {
+                //     _logger.LogInformation("No new links to process (all already queued today)");
+                //     return;
+                // }
 
                 // Before adding new links: remove any already-completed entries from the queue
                 // so the same links can be re-added (server rejects duplicates).
@@ -160,7 +160,7 @@ public sealed class TransferConsumerService : BackgroundService
 
                     var queued = await _client.AddLinksToQueueAsync(page, new[] { link.Url }, ct);
 
-                    _queuedToday.Add(link.Url);
+                    //_queuedToday.Add(link.Url);
                     addedThisRun += queued;
 
                     if (queued == 0)
@@ -181,7 +181,7 @@ public sealed class TransferConsumerService : BackgroundService
     {
         if (now.Date > _lastQueuedDate)
         {
-            _queuedToday.Clear();
+            //_queuedToday.Clear();
             _lastQueuedDate = now.Date;
             _logger.LogDebug("Daily queue tracker reset for new day {Date}", now.Date.ToShortDateString());
         }
