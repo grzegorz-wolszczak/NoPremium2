@@ -417,23 +417,6 @@ public sealed class NoPremiumBrowserClient
     }
 
     // ──────────────────────────────────────────────────────────────────
-    // Keepalive navigation
-    // ──────────────────────────────────────────────────────────────────
-
-    private static readonly string[] KeepaliveUrls =
-        new[] { "https://www.nopremium.pl/help", "https://www.nopremium.pl/offer" };
-
-    private int _keepaliveIndex;
-
-    public async Task NavigateKeepaliveAsync(IPage page)
-    {
-        var url = KeepaliveUrls[_keepaliveIndex % KeepaliveUrls.Length];
-        _keepaliveIndex++;
-        _logger.LogDebug("Keepalive navigation to {Url}", url);
-        await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
-    }
-
-    // ──────────────────────────────────────────────────────────────────
     // Diagnostics
     // ──────────────────────────────────────────────────────────────────
 
