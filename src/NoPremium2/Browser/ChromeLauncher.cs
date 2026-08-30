@@ -13,15 +13,24 @@ public sealed class ChromeLauncher : IVivaldiLauncher
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".config", DefaultConstants.ChromeProfileDirName);
 
+    /// <summary>Grace period before a dead launched process is treated as a handoff.</summary>
+    private static readonly TimeSpan HandoffGrace = TimeSpan.FromMilliseconds(2000);
+
     private readonly AppSettings _settings;
     private readonly ICdpChecker _cdpChecker;
+    private readonly IDevToolsActivePortReader _dtapReader;
     private readonly ILogger<ChromeLauncher> _logger;
     private readonly string _executablePath;
 
-    public ChromeLauncher(AppSettings settings, ICdpChecker cdpChecker, ILogger<ChromeLauncher> logger)
+    public ChromeLauncher(
+        AppSettings settings,
+        ICdpChecker cdpChecker,
+        IDevToolsActivePortReader dtapReader,
+        ILogger<ChromeLauncher> logger)
     {
         _settings = settings;
         _cdpChecker = cdpChecker;
+        _dtapReader = dtapReader;
         _logger = logger;
         _executablePath = FindExecutable()
             ?? throw new InvalidOperationException(
@@ -48,32 +57,20 @@ public sealed class ChromeLauncher : IVivaldiLauncher
             Arguments = $"{_executablePath} --remote-debugging-port={port} --user-data-dir=\"{dir}\" " +
                         $"--no-first-run --no-default-browser-check",
             UseShellExecute = false,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
         };
 
         var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Failed to start Chrome");
 
+        VivaldiLauncher.DrainOutput(process);
+
         _logger.LogInformation("Chrome started, PID: {Pid}", process.Id);
         return process;
     }
 
-    public async Task WaitForCdpAsync(int port, CancellationToken ct = default)
-    {
-        _logger.LogDebug("Waiting for Chrome CDP on port {Port}...", port);
-        var deadline = DateTime.UtcNow.AddMilliseconds(_settings.CdpReadyTimeoutMs);
-        int attempt = 0;
-        while (DateTime.UtcNow < deadline)
-        {
-            ct.ThrowIfCancellationRequested();
-            await Task.Delay(500, ct);
-            attempt++;
-            if (await _cdpChecker.IsRespondingAsync(port))
-            {
-                _logger.LogInformation("Chrome CDP ready after {Attempt} attempts", attempt);
-                return;
-            }
-        }
-        throw new TimeoutException(
-            $"Chrome CDP on port {port} did not start within {_settings.CdpReadyTimeoutMs}ms");
-    }
+    public Task WaitForCdpAsync(int port, string profileDir, Process? launched, CancellationToken ct = default)
+        => CdpWaiter.WaitAsync(port, profileDir, launched, _cdpChecker, _dtapReader,
+                               _settings.CdpReadyTimeoutMs, HandoffGrace, _logger, ct);
 }

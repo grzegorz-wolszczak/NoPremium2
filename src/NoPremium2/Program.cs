@@ -80,6 +80,13 @@ internal sealed class Program
         bool useChrome = chromePath is not null;
         bootstrapLogger.Information("Browser: {Browser}", useChrome ? $"Chrome ({chromePath})" : $"Vivaldi ({vivaldiPath})");
 
+        // Browser-specific user-data-dir so DevToolsActivePort / SingletonLock are read
+        // from the same directory the launcher writes them to.
+        string browserPath = (useChrome ? chromePath : vivaldiPath)!;
+        string browserProfileDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config",
+            useChrome ? DefaultConstants.ChromeProfileDirName : DefaultConstants.VivaldiProfileDirName);
+
         // ─────────────────────────────────────────────────────────────────────
         // 6.  Resolve log directory (Task 3: configurable LogFileDir)
         // ─────────────────────────────────────────────────────────────────────
@@ -145,10 +152,10 @@ internal sealed class Program
                 services.AddSingleton(links);
 
                 // AppSettings (used by existing LoginService / BrowserManager)
-                services.AddSingleton(AppSettings.From(config));
+                services.AddSingleton(AppSettings.From(config, browserProfileDir, browserPath));
 
                 // HTTP client (for CDP check)
-                var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
                 services.AddSingleton(http);
 
                 // Infrastructure
@@ -159,6 +166,11 @@ internal sealed class Program
                 services.AddSingleton<ICdpChecker, HttpCdpChecker>();
                 services.AddSingleton<IProcessCmdlineReader, LinuxProcessCmdlineReader>();
                 services.AddSingleton<ICdpPortDiscovery, CdpPortDiscovery>();
+                services.AddSingleton<IDevToolsActivePortReader, DevToolsActivePortReader>();
+                services.AddSingleton<ISingletonLockReader, SingletonLockReader>();
+                services.AddSingleton<IProfileLockInspector, ProfileLockInspector>();
+                services.AddSingleton<IExistingBrowserResolver, ExistingBrowserResolver>();
+                services.AddSingleton<IStaleBrowserKiller, StaleBrowserKiller>();
                 services.AddSingleton<IPortAllocator, PortAllocator>();
                 services.AddSingleton<IBrowserConnector, PlaywrightBrowserConnector>();
                 services.AddSingleton<IBrowserManager, BrowserManager>();

@@ -285,7 +285,7 @@ Rozwiązuje ścieżki relatywne w kontekście pliku configu i binarki:
 
 ### 6.5 `AppSettings` (`AppSettings.cs`)
 
-Record używany przez `BrowserManager`, `LoginService`, launchery. Zawiera `VivaldiPath`, `ProfileDir`, `LoginUrl`, `CdpReadyTimeoutMs`, `TurnstileTimeoutMs`. `AppSettings.From(AppConfig config)` tworzy instancję z configu (tylko pola timeoutów i LoginUrl — VivaldiPath i ProfileDir mają swoje hardcoded defaults w recordzie).
+Record używany przez `BrowserManager`, `LoginService`, launchery. Zawiera `VivaldiPath`, `ProfileDir`, `LoginUrl`, `CdpReadyTimeoutMs`, `TurnstileTimeoutMs`, `KillStaleBrowser`. `AppSettings.From(BaseConfig config, string profileDir, string? browserPath)` tworzy instancję z configu; `profileDir` jest wybierany w `Program.cs` per-przeglądarka (`chrome-nopremium` / `vivaldi-nopremium`), więc czytniki `DevToolsActivePort` / `SingletonLock` patrzą w ten sam katalog, do którego pisze launcher.
 
 ---
 
@@ -294,33 +294,41 @@ Record używany przez `BrowserManager`, `LoginService`, launchery. Zawiera `Viva
 ### 7.1 Przepływ `BrowserManager.GetOrLaunchAsync()`
 
 ```
-1. CdpPortDiscovery.FindExistingPortAsync()
-   → szuka procesów Chrome/Vivaldi z --remote-debugging-port=XXXX w cmdline
-   → weryfikuje czy port odpowiada (GET http://localhost:{port}/json/version)
-   → jeśli znaleziony: użyj istniejącego (isOwned=false)
-   
-2. Jeśli nie znaleziono:
-   → PortAllocator.GetFreePort() — TcpListener(port=0) → odczyt portu → Stop()
-   → IVivaldiLauncher.Launch(port, profileDir, loginUrl) — Process.Start()
-   → IVivaldiLauncher.WaitForCdpAsync(port) — polling co 500ms, max 10s
-   → isOwned=true, zachowuje Process
+1. ExistingBrowserResolver.ResolveAsync(profileDir)
+   a. DevToolsActivePortReader.Read(profileDir) → port z linii 1 →
+      sonda HTTP na 127.0.0.1 (5× co 300ms) → Found(port)
+   b. CdpPortDiscovery.FindExistingPortAsync(profileDir) — skan /proc
+      ZAWĘŻONY do --user-data-dir == profileDir → Found(port)
+   c. ProfileLockInspector.Inspect(profileDir) — SingletonLock (symlink host-pid):
+      właściciel żyje → RunningButUnreachable(pid)
+      brak / martwy → NotRunning
+
+2. Reakcja:
+   - Found(port)              → connect (isOwned=false)
+   - NotRunning               → PortAllocator.GetFreePort() → launcher.Launch →
+                                launcher.WaitForCdpAsync(port, profileDir, proc) → isOwned=true
+   - RunningButUnreachable    → KillStaleBrowser=false: InvalidOperationException z instrukcją
+                                KillStaleBrowser=true:  StaleBrowserKiller.Kill(pid) → launch
 
 3. PlaywrightBrowserConnector.ConnectAsync(port)
-   → Playwright.CreateAsync()
-   → chromium.ConnectOverCDPAsync("http://localhost:{port}")
-   → czeka na context (polling co 300ms, max 20 prób)
-   → bierze page: context.Pages[0] lub NewPageAsync()
-   
+   → chromium.ConnectOverCDPAsync("http://127.0.0.1:{port}")
+   → czeka na context (polling co 300ms, max 20 prób) → context.Pages[0] lub NewPageAsync()
+
 4. Zwraca BrowserSession(playwright, browser, page, isOwned, ownedProcess)
 ```
 
+`WaitForCdpAsync` (wspólne `CdpWaiter`): polling co 500ms do `CdpReadyTimeoutMs`, ale
+fail-fast gdy `DevToolsActivePort` pokaże inny port albo uruchomiony proces zniknął
+po ~2s bez CDP (handoff ProcessSingleton) — zamiast czekać pełne 10s.
+
 ### 7.2 `CdpPortDiscovery` (`Browser/CdpPortDiscovery.cs`)
 
-Sprawdza procesy w kolejności: `chrome`, `google-chrome`, `chromium`, `chromium-browser`, `vivaldi`.
+`LinuxProcessCmdlineReader.GetAll()` — skanuje wszystkie `/proc/{pid}/cmdline`
+(null-delimited), niezależnie od nazwy binarki (`vivaldi-bin` itd.).
 
-`LinuxProcessCmdlineReader.GetByName(name)` — `Process.GetProcessesByName(name)` + odczyt `/proc/{pid}/cmdline` (null-delimited string).
-
-`ParsePort(cmdline)` — szuka `--remote-debugging-port=XXXX` w null-delimited string. Metoda `internal static` dla testowalności.
+`ParsePort(cmdline)` / `ParseUserDataDir(cmdline)` / `CmdlineMatchesProfile(cmdline, profileDir)`
+— `public static` dla testowalności. `FindExistingPortAsync(profileDir)` pomija procesy
+z innym `--user-data-dir` (żeby nie przejąć prywatnej przeglądarki użytkownika).
 
 ### 7.3 `BrowserSession` (`Browser/BrowserSession.cs`)
 

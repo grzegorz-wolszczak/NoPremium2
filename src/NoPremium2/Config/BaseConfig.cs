@@ -58,6 +58,13 @@ public sealed record BaseConfig
     /// <summary>How often keepalive navigation runs, e.g. "01:00:00"</summary>
     public string KeepaliveInterval { get; init; } = DefaultConstants.KeepaliveInterval;
 
+    /// <summary>
+    /// If a browser is already running for the nopremium profile at startup but its
+    /// remote-debugging port is unreachable: false (default) = abort with a message
+    /// asking you to close that window; true = kill it and launch a fresh one.
+    /// </summary>
+    public bool KillStaleBrowser { get; init; } = DefaultConstants.KillStaleBrowser;
+
     // --- Browser / login (internal, not in user config file) ---
     public string LoginUrl { get; init; } = DefaultConstants.LoginUrl;
     public int CdpReadyTimeoutMs { get; init; } = DefaultConstants.CdpReadyTimeoutMs;

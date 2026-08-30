@@ -6,7 +6,7 @@ namespace NoPremium2.Browser;
 public interface IVivaldiLauncher
 {
     Process Launch(int port, string profileDir);
-    Task WaitForCdpAsync(int port, CancellationToken ct = default);
+    Task WaitForCdpAsync(int port, string profileDir, Process? launched, CancellationToken ct = default);
 }
 
 public sealed class VivaldiLauncher : IVivaldiLauncher
@@ -17,14 +17,23 @@ public sealed class VivaldiLauncher : IVivaldiLauncher
     public static string? FindExecutable() =>
         CandidatePaths.FirstOrDefault(File.Exists);
 
+    /// <summary>Grace period before a dead launched process is treated as a handoff.</summary>
+    private static readonly TimeSpan HandoffGrace = TimeSpan.FromMilliseconds(2000);
+
     private readonly AppSettings _settings;
     private readonly ICdpChecker _cdpChecker;
+    private readonly IDevToolsActivePortReader _dtapReader;
     private readonly ILogger<VivaldiLauncher> _logger;
 
-    public VivaldiLauncher(AppSettings settings, ICdpChecker cdpChecker, ILogger<VivaldiLauncher> logger)
+    public VivaldiLauncher(
+        AppSettings settings,
+        ICdpChecker cdpChecker,
+        IDevToolsActivePortReader dtapReader,
+        ILogger<VivaldiLauncher> logger)
     {
         _settings = settings;
         _cdpChecker = cdpChecker;
+        _dtapReader = dtapReader;
         _logger = logger;
     }
 
@@ -51,27 +60,88 @@ public sealed class VivaldiLauncher : IVivaldiLauncher
         var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Failed to start Vivaldi");
 
+        // Drain both pipes — Chromium is chatty on stderr and an unread pipe deadlocks
+        // the browser once the OS buffer (~64 KB) fills.
+        DrainOutput(process);
+
         _logger.LogInformation("Vivaldi started, PID: {Pid}", process.Id);
         return process;
     }
 
-    public async Task WaitForCdpAsync(int port, CancellationToken ct = default)
+    public Task WaitForCdpAsync(int port, string profileDir, Process? launched, CancellationToken ct = default)
+        => CdpWaiter.WaitAsync(port, profileDir, launched, _cdpChecker, _dtapReader,
+                               _settings.CdpReadyTimeoutMs, HandoffGrace, _logger, ct);
+
+    internal static void DrainOutput(Process process)
     {
-        _logger.LogDebug("Waiting for CDP on port {Port}...", port);
-        var deadline = DateTime.UtcNow.AddMilliseconds(_settings.CdpReadyTimeoutMs);
+        process.OutputDataReceived += static (_, _) => { };
+        process.ErrorDataReceived += static (_, _) => { };
+        try
+        {
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+        }
+        catch (InvalidOperationException)
+        {
+            // redirection not enabled (shouldn't happen here) — nothing to drain
+        }
+    }
+}
+
+/// <summary>Shared CDP-ready polling with handoff detection, used by both launchers.</summary>
+internal static class CdpWaiter
+{
+    public static async Task WaitAsync(
+        int port,
+        string profileDir,
+        Process? launched,
+        ICdpChecker cdpChecker,
+        IDevToolsActivePortReader dtapReader,
+        int timeoutMs,
+        TimeSpan handoffGrace,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        logger.LogDebug("Waiting for CDP on port {Port}...", port);
+        var start = DateTime.UtcNow;
+        var deadline = start.AddMilliseconds(timeoutMs);
         int attempt = 0;
+
         while (DateTime.UtcNow < deadline)
         {
             ct.ThrowIfCancellationRequested();
             await Task.Delay(500, ct);
             attempt++;
-            if (await _cdpChecker.IsRespondingAsync(port))
+
+            if (await cdpChecker.IsRespondingAsync(port, ct))
             {
-                _logger.LogInformation("CDP ready after {Attempt} attempts", attempt);
+                logger.LogInformation("CDP ready after {Attempt} attempts", attempt);
                 return;
             }
-            _logger.LogDebug("CDP not ready yet (attempt {Attempt})", attempt);
+
+            // Handoff signal 1: Chromium wrote DevToolsActivePort for a DIFFERENT port.
+            var info = dtapReader.Read(profileDir);
+            if (info is not null && info.Port != port)
+                throw HandoffException(port, info.Port);
+
+            // Handoff signal 2: the process we started exited almost immediately
+            // without CDP ever coming up (ProcessSingleton forwarded the launch).
+            if (launched is { HasExited: true } && DateTime.UtcNow - start > handoffGrace)
+                throw HandoffException(port, null);
+
+            logger.LogDebug("CDP not ready yet (attempt {Attempt})", attempt);
         }
-        throw new TimeoutException($"CDP on port {port} did not start within {_settings.CdpReadyTimeoutMs}ms");
+
+        throw new TimeoutException($"CDP on port {port} did not start within {timeoutMs}ms");
+    }
+
+    private static InvalidOperationException HandoffException(int requestedPort, int? actualPort)
+    {
+        var actual = actualPort is int p
+            ? $"Another browser instance is already running for this profile (it is on CDP port {p})."
+            : "The launched browser exited immediately — another instance is already running for this profile and took over the launch.";
+        return new InvalidOperationException(
+            $"Browser did not open CDP port {requestedPort}. {actual} " +
+            "Zamknij wszystkie okna przeglądarki tego profilu i uruchom NoPremium2 ponownie.");
     }
 }

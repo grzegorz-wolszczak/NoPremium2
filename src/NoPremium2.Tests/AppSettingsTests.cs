@@ -6,6 +6,8 @@ namespace NoPremium2.Tests;
 
 public sealed class AppSettingsTests
 {
+    private const string ProfileDir = "/home/test/.config/vivaldi-nopremium";
+
     // ── AppSettings.From ──────────────────────────────────────────────
 
     [Fact]
@@ -13,7 +15,7 @@ public sealed class AppSettingsTests
     {
         var config = ConfigWith(loginUrl: "https://www.nopremium.pl/login");
 
-        AppSettings.From(config).LoginUrl.Should().Be("https://www.nopremium.pl/login");
+        AppSettings.From(config, ProfileDir).LoginUrl.Should().Be("https://www.nopremium.pl/login");
     }
 
     [Fact]
@@ -21,7 +23,7 @@ public sealed class AppSettingsTests
     {
         var config = ConfigWith(cdpTimeout: 15_000);
 
-        AppSettings.From(config).CdpReadyTimeoutMs.Should().Be(15_000);
+        AppSettings.From(config, ProfileDir).CdpReadyTimeoutMs.Should().Be(15_000);
     }
 
     [Fact]
@@ -29,7 +31,23 @@ public sealed class AppSettingsTests
     {
         var config = ConfigWith(turnstileTimeout: 90_000);
 
-        AppSettings.From(config).TurnstileTimeoutMs.Should().Be(90_000);
+        AppSettings.From(config, ProfileDir).TurnstileTimeoutMs.Should().Be(90_000);
+    }
+
+    [Fact]
+    public void From_MapsProfileDirAndBrowserPath()
+    {
+        var settings = AppSettings.From(ConfigWith(), ProfileDir, "/usr/bin/vivaldi-stable");
+
+        settings.ProfileDir.Should().Be(ProfileDir);
+        settings.VivaldiPath.Should().Be("/usr/bin/vivaldi-stable");
+    }
+
+    [Fact]
+    public void From_MapsKillStaleBrowser()
+    {
+        AppSettings.From(ConfigWith(killStale: true), ProfileDir).KillStaleBrowser.Should().BeTrue();
+        AppSettings.From(ConfigWith(killStale: false), ProfileDir).KillStaleBrowser.Should().BeFalse();
     }
 
     [Fact]
@@ -40,17 +58,19 @@ public sealed class AppSettingsTests
             cdpTimeout:        5_000,
             turnstileTimeout:  60_000);
 
-        var settings = AppSettings.From(config);
+        var settings = AppSettings.From(config, ProfileDir);
 
         settings.LoginUrl.Should().Be("https://example.com/login");
         settings.CdpReadyTimeoutMs.Should().Be(5_000);
         settings.TurnstileTimeoutMs.Should().Be(60_000);
+        settings.ProfileDir.Should().Be(ProfileDir);
     }
 
     private static BaseConfig ConfigWith(
         string loginUrl        = "https://www.nopremium.pl/login",
         int cdpTimeout         = 10_000,
-        int turnstileTimeout   = 120_000) =>
+        int turnstileTimeout   = 120_000,
+        bool killStale         = false) =>
         new BaseConfig
         {
             NoPremiumUsername = "u",
@@ -62,5 +82,6 @@ public sealed class AppSettingsTests
             LoginUrl          = loginUrl,
             CdpReadyTimeoutMs = cdpTimeout,
             TurnstileTimeoutMs = turnstileTimeout,
+            KillStaleBrowser  = killStale,
         };
 }

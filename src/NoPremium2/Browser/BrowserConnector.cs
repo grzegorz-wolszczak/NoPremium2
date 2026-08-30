@@ -17,7 +17,8 @@ public sealed class PlaywrightBrowserConnector : IBrowserConnector
     public async Task<(IPlaywright Playwright, IBrowser Browser, IPage Page)> ConnectAsync(int port, CancellationToken ct = default)
     {
         var playwright = await Playwright.CreateAsync();
-        var browser = await playwright.Chromium.ConnectOverCDPAsync($"http://localhost:{port}");
+        // 127.0.0.1, not "localhost" — Chromium's CDP endpoint is IPv4-only.
+        var browser = await playwright.Chromium.ConnectOverCDPAsync($"http://127.0.0.1:{port}");
         _logger.LogInformation("Connected to browser: {Name} v{Version}", browser.BrowserType.Name, browser.Version);
 
         var context = await WaitForContextAsync(browser, ct);

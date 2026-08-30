@@ -24,6 +24,12 @@ public static class DefaultConstants
     public const int    CdpReadyTimeoutMs = 10_000;
     public const int    TurnstileTimeoutMs = 120_000;
 
+    /// <summary>
+    /// When a browser already owns our profile but its CDP port is unreachable:
+    /// false = abort and ask the user to close it, true = kill it and relaunch.
+    /// </summary>
+    public const bool   KillStaleBrowser  = false;
+
     // ── Browser profile directory names ──────────────────────────────
     public const string ChromeProfileDirName  = "chrome-nopremium";
     public const string VivaldiProfileDirName = "vivaldi-nopremium";
