@@ -183,6 +183,7 @@ internal sealed class Program
 
                 // Login service
                 services.AddSingleton<ILoginService, LoginService>();
+                services.AddSingleton<ILoginStateChecker, LoginStateChecker>();
 
                 // Browser session provider (shared between all services)
                 services.AddSingleton<IBrowserSessionProvider, BrowserSessionProvider>();

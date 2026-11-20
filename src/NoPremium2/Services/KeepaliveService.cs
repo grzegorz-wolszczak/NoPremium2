@@ -64,8 +64,10 @@ public sealed class KeepaliveService : BackgroundService
                 await _sessionProvider.UsePageAsync(async page =>
                 {
                     var result = await _loginService.LoginAsync(page, _username, _password);
-                    if (!result.Success)
-                        _logger.LogError("Keepalive re-login failed, still on: {Url}", result.FinalUrl);
+                    if (result.Success)
+                        _logger.LogInformation("Keepalive: session OK, logged in (URL: {Url})", result.FinalUrl);
+                    else
+                        _logger.LogError("Keepalive: NOT LOGGED IN, re-login failed, still on: {Url}", result.FinalUrl);
                 }, stoppingToken);
             }
             catch (OperationCanceledException)

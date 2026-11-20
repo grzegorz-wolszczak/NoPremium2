@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using NoPremium2.Infrastructure;
+using NoPremium2.Login;
 
 namespace NoPremium2.NoPremium;
 
@@ -32,14 +33,28 @@ public sealed class NoPremiumBrowserClient
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     //private readonly SessionPageSaver _sessionPageSaver;
+    private readonly ILoginStateChecker _loginStateChecker;
     private readonly ILogger<NoPremiumBrowserClient> _logger;
 
     public NoPremiumBrowserClient(
         //SessionPageSaver sessionPageSaver,
+        ILoginStateChecker loginStateChecker,
         ILogger<NoPremiumBrowserClient> logger)
     {
         //_sessionPageSaver = sessionPageSaver;
+        _loginStateChecker = loginStateChecker;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Call right after a navigation: the freshly loaded page tells whether the server still
+    /// considers us logged in. Throws <see cref="SessionExpiredException"/> if not, so the
+    /// session provider can log in again and retry.
+    /// </summary>
+    private async Task EnsureLoggedInAsync(IPage page, string context)
+    {
+        if (!await _loginStateChecker.IsLoggedInAsync(page, context))
+            throw new SessionExpiredException(context, page.Url);
     }
 
     // ──────────────────────────────────────────────────────────────────
@@ -123,6 +138,7 @@ public sealed class NoPremiumBrowserClient
 
         _logger.LogDebug("Navigating to /files to check for completed entries to clean up");
         await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.NetworkIdle, Timeout = 60_000 });
+        await EnsureLoggedInAsync(page, "after opening /files (cleanup)");
 
         // Collect completed entries via JS. Each completed row has:
         //   td[id^="status"] div.finish  — "Zakończono"
@@ -273,6 +289,7 @@ public sealed class NoPremiumBrowserClient
 
         _logger.LogInformation("Navigating to /files to queue {Count} link(s)", urlList.Count);
         await page.GotoAsync(FilesUrl, new() { WaitUntil = WaitUntilState.NetworkIdle, Timeout = 60_000 });
+        await EnsureLoggedInAsync(page, "after opening /files (queue links)");
 
         if (!page.Url.Contains("/files"))
             throw new InvalidOperationException(
@@ -363,6 +380,7 @@ public sealed class NoPremiumBrowserClient
     {
         _logger.LogInformation("Navigating to /voucher to consume code '{Code}'", code);
         await page.GotoAsync(VoucherUrl, new() { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 30_000 });
+        await EnsureLoggedInAsync(page, "after opening /voucher");
 
         // Fill the voucher code input. Form field name from old code: 'voucher'
         var voucherInput = page.Locator("input[name='voucher']");

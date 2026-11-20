@@ -25,6 +25,7 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
 
     private readonly IBrowserManager _browserManager;
     private readonly ILoginService _loginService;
+    private readonly ILoginStateChecker _loginStateChecker;
     private readonly BaseConfig _config;
     //private readonly NoPremium2.Infrastructure.SessionPageSaver _sessionPageSaver;
     private readonly ILogger<BrowserSessionProvider> _logger;
@@ -32,12 +33,14 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
     public BrowserSessionProvider(
         IBrowserManager browserManager,
         ILoginService loginService,
+        ILoginStateChecker loginStateChecker,
         BaseConfig config,
         //NoPremium2.Infrastructure.SessionPageSaver sessionPageSaver,
         ILogger<BrowserSessionProvider> logger)
     {
         _browserManager = browserManager;
         _loginService = loginService;
+        _loginStateChecker = loginStateChecker;
         _config = config;
         //_sessionPageSaver = sessionPageSaver;
         _logger = logger;
@@ -62,7 +65,19 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
         try
         {
             var page = await EnsureSessionAsync(ct);
-            return await action(page);
+            try
+            {
+                return await action(page);
+            }
+            catch (SessionExpiredException ex) when (!ct.IsCancellationRequested)
+            {
+                // Logged out in the middle of the action (detected after a navigation).
+                // Log in again and retry the action once; a second expiry propagates.
+                _logger.LogWarning("Session expired during action ({Message}), logging in again and retrying once",
+                    ex.Message);
+                await LoginOrThrowAsync(page, "re-login after session expiry");
+                return await action(page);
+            }
         }
         catch (Microsoft.Playwright.PlaywrightException) when (ct.IsCancellationRequested)
         {
@@ -87,7 +102,16 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
     private async Task<IPage> EnsureSessionAsync(CancellationToken ct)
     {
         if (_session is not null && IsSessionAlive(_session))
+        {
+            // Browser is alive — but the site may have logged us out. Check the current page.
+            // NOTE: the DOM may be stale (last loaded page); a fresh check happens after each
+            // navigation in NoPremiumBrowserClient, which throws SessionExpiredException.
+            if (await _loginStateChecker.IsLoggedInAsync(_session.Page, "before using page"))
+                return _session.Page;
+
+            await LoginOrThrowAsync(_session.Page, "re-login before using page");
             return _session.Page;
+        }
 
         if (_session is not null)
         {
@@ -100,18 +124,23 @@ public sealed class BrowserSessionProvider : IBrowserSessionProvider, IAsyncDisp
         _session = await _browserManager.GetOrLaunchAsync(ct);
         //_sessionPageSaver.AttachToPage(_session.Page);
 
-        _logger.LogInformation("Logging in to nopremium.pl...");
-        var result = await _loginService.LoginAsync(
-            _session.Page,
-            _config.NoPremiumUsername,
-            _config.NoPremiumPassword);
+        await LoginOrThrowAsync(_session.Page, "login after browser (re)connect");
+        return _session.Page;
+    }
+
+    private async Task LoginOrThrowAsync(IPage page, string context)
+    {
+        _logger.LogInformation("Logging in to nopremium.pl ({Context})...", context);
+        var result = await _loginService.LoginAsync(page, _config.NoPremiumUsername, _config.NoPremiumPassword);
 
         if (!result.Success)
             throw new InvalidOperationException(
-                $"Login to nopremium.pl failed. Final URL: {result.FinalUrl}");
+                $"Login to nopremium.pl failed ({context}). Final URL: {result.FinalUrl}");
 
-        _logger.LogInformation("Login successful");
-        return _session.Page;
+        _logger.LogInformation("Login successful ({Context})", context);
+
+        // Diagnostic only: log whether the page we landed on really shows a logged-in session.
+        await _loginStateChecker.IsLoggedInAsync(page, $"after {context}");
     }
 
     internal static bool IsSessionAlive(BrowserSession session)

@@ -38,10 +38,11 @@ public sealed class LoginService : ILoginService
         // Already logged in — server redirected away from /login
         if (!page.Url.Contains("/login"))
         {
-            _logger.LogInformation("Already logged in, redirected to: {Url}", page.Url);
+            _logger.LogInformation("Login check (login page): LOGGED IN — server redirected away from /login to {Url}", page.Url);
             return new LoginResult(true, page.Url);
         }
 
+        _logger.LogWarning("Login check (login page): NOT LOGGED IN — still on {Url}, logging in", page.Url);
         _logger.LogInformation("Waiting for login form (Cloudflare Turnstile)...");
         var loginForm = page.Locator("#login_box_form");
         var loginInput = loginForm.Locator("input[name='login']");
@@ -61,7 +62,7 @@ public sealed class LoginService : ILoginService
 
         if (!page.Url.Contains("/login"))
         {
-            _logger.LogInformation("Manual login detected, URL: {Url}", page.Url);
+            _logger.LogInformation("Login check (waiting for form): LOGGED IN — manual login detected, URL: {Url}", page.Url);
             return new LoginResult(true, page.Url);
         }
 
@@ -74,18 +75,25 @@ public sealed class LoginService : ILoginService
         _logger.LogInformation("Clicking submit");
         await page.Locator("#button_input").ClickAsync();
 
-        await page.WaitForURLAsync(url => !url.Contains("/login"), new PageWaitForURLOptions
+        try
         {
-            Timeout = 30_000,
-        });
+            await page.WaitForURLAsync(url => !url.Contains("/login"), new PageWaitForURLOptions
+            {
+                Timeout = 30_000,
+            });
+        }
+        catch (TimeoutException)
+        {
+            // Still on /login after submit — reported as a failed login below.
+        }
 
         bool success = !page.Url.Contains("/login");
         var result = new LoginResult(success, page.Url);
 
         if (success)
-            _logger.LogInformation("Login successful, redirected to: {Url}", result.FinalUrl);
+            _logger.LogInformation("Login check (after submit): LOGGED IN — redirected to {Url}", result.FinalUrl);
         else
-            _logger.LogWarning("Login may have failed, still on: {Url}", result.FinalUrl);
+            _logger.LogWarning("Login check (after submit): NOT LOGGED IN — still on {Url}", result.FinalUrl);
 
         return result;
     }
